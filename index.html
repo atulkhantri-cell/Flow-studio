@@ -1,0 +1,3271 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Flow Studio — Local AI Filmmaking Suite</title>
+<meta name="description" content="Flow Studio: a local-first AI filmmaking workspace. Text-to-video, image generation, character consistency, storyboard, timeline editing and export. No credits, no watermarks." />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+/* ============================================================
+   FLOW STUDIO — design system
+   Palette: graphite black, warm bone ink, tungsten amber accent.
+   Type: Fraunces (display) / Inter (UI) / JetBrains Mono (readouts)
+   ============================================================ */
+:root{
+  --bg:#0A0C0F;
+  --bg-2:#0E1216;
+  --panel:#12161B;
+  --panel-2:#171D24;
+  --panel-3:#1D242C;
+  --line:#242C35;
+  --line-2:#2E3843;
+  --ink:#ECE7DE;
+  --ink-2:#B4BCC5;
+  --ink-3:#78838F;
+  --amber:#FF6A2B;
+  --amber-2:#FFA24C;
+  --amber-soft:rgba(255,106,43,.14);
+  --ok:#5BD69A;
+  --warn:#E9B949;
+  --err:#E5484D;
+  --record:#FF3B30;
+  --radius:10px;
+  --radius-sm:7px;
+  --shadow:0 18px 40px -22px rgba(0,0,0,.9);
+  --mono:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+  --sans:"Inter",system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
+  --display:"Fraunces",Georgia,"Times New Roman",serif;
+  --rail:236px;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:14px;line-height:1.5}
+body{min-height:100vh;overflow-x:hidden;-webkit-font-smoothing:antialiased}
+::selection{background:var(--amber);color:#12080A}
+a{color:var(--amber-2);text-decoration:none}
+a:hover{text-decoration:underline}
+h1,h2,h3,h4{font-family:var(--display);font-weight:600;letter-spacing:-.015em;margin:0}
+h1{font-size:30px;line-height:1.12}
+h2{font-size:21px}
+h3{font-size:16px}
+p{margin:0 0 10px}
+small{color:var(--ink-3)}
+code,kbd,pre{font-family:var(--mono)}
+pre{background:#0B0F13;border:1px solid var(--line);border-radius:var(--radius-sm);padding:12px;overflow:auto;font-size:11.5px;color:#9FD8C6;margin:0}
+hr{border:0;border-top:1px solid var(--line);margin:16px 0}
+
+/* ---------- scrollbars ---------- */
+*::-webkit-scrollbar{width:10px;height:10px}
+*::-webkit-scrollbar-track{background:#0B0E12}
+*::-webkit-scrollbar-thumb{background:#222B34;border-radius:20px;border:2px solid #0B0E12}
+*::-webkit-scrollbar-thumb:hover{background:#313D48}
+
+/* ---------- app shell ---------- */
+.app{display:grid;grid-template-columns:var(--rail) 1fr;min-height:100vh}
+.rail{
+  position:sticky;top:0;height:100vh;display:flex;flex-direction:column;
+  background:linear-gradient(180deg,#0D1116 0%,#0A0C0F 100%);
+  border-right:1px solid var(--line);z-index:40
+}
+.brand{padding:18px 18px 14px;display:flex;gap:11px;align-items:center;border-bottom:1px solid var(--line)}
+.brand-mark{width:34px;height:34px;border-radius:9px;background:
+  radial-gradient(120% 120% at 20% 15%,#FF8A4C 0%,#FF6A2B 42%,#B8380F 100%);
+  position:relative;flex:none;box-shadow:0 6px 18px -8px rgba(255,106,43,.75)}
+.brand-mark:before,.brand-mark:after{content:"";position:absolute;background:rgba(12,8,6,.85)}
+.brand-mark:before{width:4px;height:16px;left:8px;top:9px;border-radius:2px;box-shadow:14px 0 0 rgba(12,8,6,.85)}
+.brand-mark:after{width:22px;height:3px;left:6px;top:15.5px;border-radius:2px}
+.brand-name{font-family:var(--display);font-size:17px;font-weight:700;letter-spacing:-.02em}
+.brand-sub{font-family:var(--mono);font-size:9.5px;letter-spacing:.16em;color:var(--ink-3);text-transform:uppercase}
+
+.nav{flex:1;overflow-y:auto;padding:14px 12px 8px}
+.nav-group{font-family:var(--mono);font-size:9.5px;letter-spacing:.18em;text-transform:uppercase;color:#5A6472;padding:14px 10px 7px}
+.nav-item{
+  display:flex;align-items:center;gap:10px;width:100%;padding:9px 10px;margin:2px 0;
+  border-radius:8px;border:1px solid transparent;background:transparent;color:var(--ink-2);
+  font:500 13px/1 var(--sans);cursor:pointer;text-align:left;transition:.15s ease;position:relative
+}
+.nav-item:hover{background:#141A21;color:var(--ink)}
+.nav-item.active{background:linear-gradient(90deg,rgba(255,106,43,.16),rgba(255,106,43,.04));color:#fff;border-color:rgba(255,106,43,.28)}
+.nav-item.active:before{content:"";position:absolute;left:0;top:9px;bottom:9px;width:2px;background:var(--amber);border-radius:2px}
+.nav-ico{width:17px;height:17px;flex:none;opacity:.85}
+.nav-badge{margin-left:auto;font-family:var(--mono);font-size:9.5px;padding:2px 6px;border-radius:20px;background:#1E262F;color:var(--ink-3)}
+
+.rail-foot{padding:12px;border-top:1px solid var(--line);display:flex;flex-direction:column;gap:9px}
+.status-pill{display:flex;align-items:center;gap:8px;padding:9px 11px;border-radius:9px;background:#10151A;border:1px solid var(--line);font-family:var(--mono);font-size:10.5px;letter-spacing:.04em}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--ink-3);flex:none;box-shadow:0 0 0 3px rgba(255,255,255,.04)}
+.dot.ok{background:var(--ok);box-shadow:0 0 10px rgba(91,214,154,.65)}
+.dot.warn{background:var(--warn);box-shadow:0 0 10px rgba(233,185,73,.55)}
+.dot.err{background:var(--err);box-shadow:0 0 10px rgba(229,72,77,.6)}
+
+/* ---------- top bar ---------- */
+.main{min-width:0;display:flex;flex-direction:column}
+.topbar{
+  position:sticky;top:0;z-index:30;display:flex;align-items:center;gap:14px;
+  padding:13px 22px;background:rgba(10,12,15,.86);backdrop-filter:blur(14px);border-bottom:1px solid var(--line)
+}
+.crumb{font-family:var(--mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-3)}
+.crumb b{color:var(--ink);font-weight:600}
+.topbar-spacer{flex:1}
+.proj-select{
+  display:flex;align-items:center;gap:8px;padding:7px 11px;border-radius:8px;background:#12171D;
+  border:1px solid var(--line);color:var(--ink-2);font-size:12.5px;cursor:pointer;max-width:260px
+}
+.proj-select b{color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tc{font-family:var(--mono);font-size:12px;color:var(--amber-2);letter-spacing:.06em;padding:6px 10px;border:1px solid var(--line);border-radius:7px;background:#0E1318}
+
+/* ---------- content ---------- */
+.content{padding:24px 22px 60px;max-width:1500px;width:100%}
+.view{display:none;animation:fade .25s ease}
+.view.active{display:block}
+@keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+.page-head{display:flex;align-items:flex-end;gap:18px;flex-wrap:wrap;margin-bottom:20px}
+.page-head .lead{max-width:640px;color:var(--ink-2);font-size:13.5px}
+.eyebrow{font-family:var(--mono);font-size:10px;letter-spacing:.22em;text-transform:uppercase;color:var(--amber);margin-bottom:7px;display:flex;align-items:center;gap:8px}
+.eyebrow:after{content:"";height:1px;flex:1;background:linear-gradient(90deg,rgba(255,106,43,.5),transparent);max-width:120px}
+
+/* ---------- panels / grid ---------- */
+.grid{display:grid;gap:16px}
+.g2{grid-template-columns:repeat(2,minmax(0,1fr))}
+.g3{grid-template-columns:repeat(3,minmax(0,1fr))}
+.g4{grid-template-columns:repeat(4,minmax(0,1fr))}
+.split{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:16px;align-items:start}
+.split-wide{display:grid;grid-template-columns:minmax(0,1fr) 360px;gap:16px;align-items:start}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow)}
+.panel-head{display:flex;align-items:center;gap:10px;padding:13px 15px;border-bottom:1px solid var(--line);background:linear-gradient(180deg,#151A21,#12161B)}
+.panel-head h3{font-family:var(--sans);font-size:12.5px;font-weight:600;letter-spacing:.02em}
+.panel-head .spacer{flex:1}
+.panel-body{padding:15px}
+.panel-body.tight{padding:11px}
+.panel-foot{padding:11px 15px;border-top:1px solid var(--line);background:#10151A;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+
+.stat{padding:15px;border-radius:var(--radius);background:linear-gradient(160deg,#161C23,#11161B);border:1px solid var(--line);position:relative;overflow:hidden}
+.stat .k{font-family:var(--mono);font-size:9.5px;letter-spacing:.17em;text-transform:uppercase;color:var(--ink-3)}
+.stat .v{font-family:var(--display);font-size:28px;font-weight:600;letter-spacing:-.02em;margin-top:6px}
+.stat .d{font-size:11.5px;color:var(--ink-3);margin-top:3px}
+.stat.amber:after{content:"";position:absolute;right:-24px;top:-24px;width:88px;height:88px;border-radius:50%;background:radial-gradient(circle,rgba(255,106,43,.22),transparent 70%)}
+
+/* ---------- buttons ---------- */
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:9px 15px;border-radius:8px;
+  border:1px solid var(--line-2);background:#171D24;color:var(--ink);font:600 12.5px/1 var(--sans);
+  cursor:pointer;transition:.15s ease;white-space:nowrap
+}
+.btn:hover{background:#1E262F;border-color:#3B4854;transform:translateY(-1px)}
+.btn:active{transform:none}
+.btn:disabled{opacity:.45;cursor:not-allowed;transform:none}
+.btn-primary{background:linear-gradient(180deg,#FF7B3D,#F1541B);border-color:#FF8A4C;color:#160A04;box-shadow:0 12px 26px -14px rgba(255,106,43,.85)}
+.btn-primary:hover{background:linear-gradient(180deg,#FF8B52,#FF6122);border-color:#FFA24C}
+.btn-ghost{background:transparent;border-color:var(--line)}
+.btn-danger{background:rgba(229,72,77,.12);border-color:rgba(229,72,77,.4);color:#FF9B9E}
+.btn-sm{padding:6px 10px;font-size:11.5px;border-radius:7px}
+.btn-block{width:100%}
+.btn .ico{width:15px;height:15px}
+
+/* ---------- forms ---------- */
+.field{margin-bottom:13px}
+.label{display:flex;align-items:center;gap:7px;font-family:var(--mono);font-size:9.5px;letter-spacing:.15em;text-transform:uppercase;color:var(--ink-3);margin-bottom:6px}
+.label .req{color:var(--amber)}
+.input,.select,.textarea{
+  width:100%;padding:9px 11px;border-radius:8px;background:#0E1318;border:1px solid var(--line);
+  color:var(--ink);font:400 13px/1.5 var(--sans);outline:none;transition:.15s
+}
+.textarea{resize:vertical;min-height:88px;font-family:var(--sans)}
+.textarea.mono{font-family:var(--mono);font-size:12px}
+.input:focus,.select:focus,.textarea:focus{border-color:var(--amber);box-shadow:0 0 0 3px rgba(255,106,43,.16)}
+.input.mono{font-family:var(--mono);font-size:12px}
+.select{appearance:none;background-image:linear-gradient(45deg,transparent 50%,#7C8894 50%),linear-gradient(135deg,#7C8894 50%,transparent 50%);background-position:calc(100% - 16px) 50%,calc(100% - 11px) 50%;background-size:5px 5px,5px 5px;background-repeat:no-repeat;padding-right:30px}
+.row{display:flex;gap:11px;flex-wrap:wrap}
+.row>.field{flex:1;min-width:130px}
+.hint{font-size:11px;color:var(--ink-3);margin-top:6px;line-height:1.55}
+.switch{display:flex;align-items:center;gap:9px;cursor:pointer;font-size:12.5px;color:var(--ink-2)}
+.switch input{display:none}
+.track{width:36px;height:20px;border-radius:20px;background:#222B34;position:relative;transition:.18s;flex:none}
+.track:after{content:"";position:absolute;top:3px;left:3px;width:14px;height:14px;border-radius:50%;background:#7C8894;transition:.18s}
+.switch input:checked+.track{background:rgba(255,106,43,.32)}
+.switch input:checked+.track:after{left:19px;background:var(--amber)}
+input[type=range]{width:100%;-webkit-appearance:none;height:4px;border-radius:4px;background:#222B34;outline:none}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:15px;height:15px;border-radius:50%;background:var(--amber);cursor:pointer;border:2px solid #12161B;box-shadow:0 2px 8px rgba(255,106,43,.5)}
+.seg{display:flex;gap:4px;background:#0E1318;border:1px solid var(--line);border-radius:9px;padding:4px;flex-wrap:wrap}
+.seg button{flex:1;min-width:52px;padding:7px 9px;border-radius:6px;border:0;background:transparent;color:var(--ink-3);font:600 11.5px/1 var(--sans);cursor:pointer;transition:.15s}
+.seg button:hover{color:var(--ink);background:#171D24}
+.seg button.on{background:var(--amber);color:#170B04}
+.chip{display:inline-flex;align-items:center;gap:6px;padding:5px 10px;border-radius:20px;border:1px solid var(--line-2);background:#141A21;color:var(--ink-2);font-size:11.5px;cursor:pointer;transition:.15s}
+.chip:hover{border-color:#3D4A56;color:var(--ink)}
+.chip.on{background:rgba(255,106,43,.16);border-color:rgba(255,106,43,.55);color:#FFC2A2}
+.chip .x{opacity:.6;font-family:var(--mono)}
+.tag{display:inline-flex;align-items:center;gap:5px;padding:3px 8px;border-radius:5px;background:#1B222A;border:1px solid var(--line);font-family:var(--mono);font-size:9.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3)}
+.tag.amber{background:rgba(255,106,43,.13);border-color:rgba(255,106,43,.32);color:#FFB189}
+.tag.ok{background:rgba(91,214,154,.12);border-color:rgba(91,214,154,.3);color:#8CE7BC}
+.tag.warn{background:rgba(233,185,73,.12);border-color:rgba(233,185,73,.3);color:#F2D28A}
+.tag.err{background:rgba(229,72,77,.12);border-color:rgba(229,72,77,.3);color:#FF9EA1}
+
+/* ---------- viewfinder / media frames ---------- */
+.frame{position:relative;border-radius:9px;overflow:hidden;background:#0B0F13;border:1px solid var(--line);aspect-ratio:16/9;display:flex;align-items:center;justify-content:center}
+.frame img,.frame video{width:100%;height:100%;object-fit:cover;display:block}
+.frame .corner{position:absolute;width:16px;height:16px;border:2px solid rgba(255,106,43,.85);pointer-events:none}
+.frame .c1{top:8px;left:8px;border-right:0;border-bottom:0}
+.frame .c2{top:8px;right:8px;border-left:0;border-bottom:0}
+.frame .c3{bottom:8px;left:8px;border-right:0;border-top:0}
+.frame .c4{bottom:8px;right:8px;border-left:0;border-top:0}
+.frame .osd{position:absolute;left:10px;top:10px;font-family:var(--mono);font-size:9.5px;letter-spacing:.13em;color:rgba(236,231,222,.8);text-transform:uppercase;text-shadow:0 1px 6px rgba(0,0,0,.8)}
+.frame .osd-r{position:absolute;right:10px;top:10px;font-family:var(--mono);font-size:9.5px;letter-spacing:.13em;color:rgba(255,162,76,.92);text-shadow:0 1px 6px rgba(0,0,0,.8)}
+.frame .placeholder{padding:22px;text-align:center;color:#4E5A66;font-family:var(--mono);font-size:10.5px;letter-spacing:.13em;text-transform:uppercase;line-height:1.9}
+
+/* film strip motif */
+.strip{display:flex;gap:10px;overflow-x:auto;padding:12px 2px 16px;position:relative}
+.strip:before{content:"";position:absolute;left:0;right:0;top:0;height:12px;
+  background-image:radial-gradient(circle at 8px 6px,#0A0C0F 3.2px,transparent 3.4px);background-size:22px 12px;opacity:.75}
+.strip-card{
+  flex:none;width:190px;border-radius:8px;background:var(--panel-2);border:1px solid var(--line);
+  overflow:hidden;cursor:pointer;transition:.16s;position:relative
+}
+.strip-card:hover{border-color:#3D4A56;transform:translateY(-3px)}
+.strip-card.sel{border-color:var(--amber);box-shadow:0 0 0 1px rgba(255,106,43,.45),0 18px 30px -18px rgba(255,106,43,.6)}
+.strip-card .thumb{aspect-ratio:16/9;background:#0B0F13;position:relative;overflow:hidden}
+.strip-card .thumb img,.strip-card .thumb video{width:100%;height:100%;object-fit:cover}
+.strip-card .num{position:absolute;left:8px;top:7px;font-family:var(--mono);font-size:9.5px;letter-spacing:.14em;color:var(--amber-2);background:rgba(10,12,15,.72);padding:2px 6px;border-radius:4px}
+.strip-card .meta{padding:9px 10px}
+.strip-card .meta .t{font-size:11.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.strip-card .meta .s{font-family:var(--mono);font-size:9px;letter-spacing:.1em;color:var(--ink-3);margin-top:3px;text-transform:uppercase}
+
+/* ---------- tables / lists ---------- */
+.table{width:100%;border-collapse:collapse;font-size:12px}
+.table th{font-family:var(--mono);font-size:9.5px;letter-spacing:.15em;text-transform:uppercase;color:var(--ink-3);text-align:left;padding:9px 11px;border-bottom:1px solid var(--line);font-weight:500}
+.table td{padding:10px 11px;border-bottom:1px solid #1A2128;vertical-align:middle;color:var(--ink-2)}
+.table tr:hover td{background:#141A21;color:var(--ink)}
+.table .name{color:var(--ink);font-weight:600}
+.list{display:flex;flex-direction:column;gap:8px}
+.list-item{display:flex;align-items:center;gap:11px;padding:10px 12px;border-radius:8px;background:#12171D;border:1px solid var(--line);transition:.15s}
+.list-item:hover{border-color:#37424E}
+.list-item .grow{flex:1;min-width:0}
+.list-item .title{font-size:12.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.list-item .sub{font-family:var(--mono);font-size:9.5px;letter-spacing:.1em;color:var(--ink-3);text-transform:uppercase;margin-top:2px}
+.thumb-sm{width:60px;height:36px;border-radius:5px;object-fit:cover;background:#0B0F13;border:1px solid var(--line);flex:none}
+
+/* progress */
+.bar{height:5px;border-radius:5px;background:#1D242C;overflow:hidden}
+.bar i{display:block;height:100%;border-radius:5px;background:linear-gradient(90deg,#FF7B3D,#FFB877);transition:width .35s ease}
+.bar.ind i{width:35%;animation:slide 1.4s ease-in-out infinite}
+@keyframes slide{0%{margin-left:-35%}100%{margin-left:100%}}
+
+/* timeline */
+.tl{position:relative;background:#0D1216;border:1px solid var(--line);border-radius:9px;padding:10px;overflow-x:auto}
+.tl-ruler{display:flex;gap:0;height:22px;border-bottom:1px solid var(--line);margin-bottom:8px;min-width:100%;position:relative}
+.tl-ruler span{flex:none;width:80px;font-family:var(--mono);font-size:9px;color:#57626E;border-left:1px solid #1B222A;padding-left:5px;letter-spacing:.08em}
+.tl-track{display:flex;align-items:center;gap:8px;margin-bottom:7px;min-width:100%}
+.tl-label{width:88px;flex:none;font-family:var(--mono);font-size:9px;letter-spacing:.13em;text-transform:uppercase;color:var(--ink-3)}
+.tl-lane{flex:1;display:flex;gap:4px;min-height:44px;align-items:stretch;min-width:520px}
+.tl-clip{
+  position:relative;border-radius:6px;background:linear-gradient(180deg,#1D2833,#16202A);border:1px solid #2B3844;
+  padding:6px 8px;min-width:78px;cursor:grab;overflow:hidden;transition:.14s
+}
+.tl-clip:hover{border-color:var(--amber);transform:translateY(-1px)}
+.tl-clip.drag{opacity:.42}
+.tl-clip .n{font-size:10.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tl-clip .d{font-family:var(--mono);font-size:8.5px;color:var(--amber-2);letter-spacing:.1em;margin-top:2px}
+.tl-clip.audio{background:linear-gradient(180deg,#1B2A2A,#142020);border-color:#28403C}
+.tl-clip.text{background:linear-gradient(180deg,#2A2231,#211A27);border-color:#43324F}
+.tl-trans{width:14px;flex:none;display:flex;align-items:center;justify-content:center;color:#4C5763;font-family:var(--mono);font-size:9px}
+
+/* meters */
+.meter{display:flex;align-items:flex-end;gap:2px;height:34px}
+.meter i{width:3px;background:#232C35;border-radius:2px;transition:height .18s ease,background .18s}
+.meter.live i{background:linear-gradient(180deg,#FF7B3D,#B8380F)}
+
+/* modal */
+.modal-bg{position:fixed;inset:0;background:rgba(5,7,9,.74);backdrop-filter:blur(7px);z-index:100;display:none;align-items:center;justify-content:center;padding:22px}
+.modal-bg.open{display:flex;animation:fade .18s ease}
+.modal{width:100%;max-width:620px;max-height:88vh;overflow-y:auto;background:var(--panel);border:1px solid var(--line-2);border-radius:13px;box-shadow:0 40px 90px -30px #000}
+.modal-head{padding:17px 19px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:12px}
+.modal-head h3{font-family:var(--display);font-size:19px}
+.modal-body{padding:19px}
+.modal-foot{padding:14px 19px;border-top:1px solid var(--line);display:flex;gap:10px;justify-content:flex-end;background:#10151A}
+
+/* toast */
+.toasts{position:fixed;right:18px;bottom:18px;z-index:200;display:flex;flex-direction:column;gap:9px;max-width:360px}
+.toast{padding:12px 14px;border-radius:9px;background:#161D24;border:1px solid var(--line-2);box-shadow:0 20px 40px -18px #000;font-size:12.5px;display:flex;gap:10px;align-items:flex-start;animation:slideIn .22s ease}
+@keyframes slideIn{from{opacity:0;transform:translateX(18px)}to{opacity:1;transform:none}}
+.toast .t-ico{width:16px;height:16px;flex:none;margin-top:1px}
+.toast.ok{border-color:rgba(91,214,154,.4)} .toast.ok .t-ico{color:var(--ok)}
+.toast.err{border-color:rgba(229,72,77,.42)} .toast.err .t-ico{color:var(--err)}
+.toast.warn{border-color:rgba(233,185,73,.42)} .toast.warn .t-ico{color:var(--warn)}
+
+/* misc */
+.empty{padding:30px 18px;text-align:center;color:#4E5A66;font-family:var(--mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;line-height:2}
+.kv{display:flex;justify-content:space-between;gap:12px;padding:7px 0;border-bottom:1px dashed #1D242C;font-size:12px}
+.kv:last-child{border-bottom:0}
+.kv .k{color:var(--ink-3)}
+.kv .v{font-family:var(--mono);font-size:11.5px;color:var(--ink);text-align:right}
+.note{padding:11px 13px;border-radius:8px;background:rgba(255,106,43,.08);border:1px solid rgba(255,106,43,.24);font-size:11.5px;color:#F1C3A8;line-height:1.65}
+.note.blue{background:rgba(91,164,214,.08);border-color:rgba(91,164,214,.24);color:#B4D4E8}
+.note.green{background:rgba(91,214,154,.08);border-color:rgba(91,214,154,.22);color:#A9E4C8}
+.sprocket{height:12px;background-image:radial-gradient(circle at 8px 6px,#0A0C0F 3.2px,transparent 3.4px);background-size:22px 12px;opacity:.6}
+.divider-label{display:flex;align-items:center;gap:11px;margin:18px 0 12px;color:var(--ink-3);font-family:var(--mono);font-size:9.5px;letter-spacing:.2em;text-transform:uppercase}
+.divider-label:after{content:"";flex:1;height:1px;background:var(--line)}
+.canvas-wrap{position:relative;border:1px solid var(--line);border-radius:9px;overflow:hidden;background:
+  repeating-conic-gradient(#0E1217 0% 25%,#0B0F13 0% 50%) 50%/18px 18px}
+.canvas-wrap canvas{display:block;width:100%;height:auto;cursor:crosshair}
+
+/* responsive */
+@media (max-width:1180px){
+  .split,.split-wide{grid-template-columns:1fr}
+  .g4{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .g3{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media (max-width:880px){
+  :root{--rail:0px}
+  .app{grid-template-columns:1fr}
+  .rail{position:fixed;left:0;top:0;width:250px;transform:translateX(-100%);transition:.22s ease;box-shadow:0 30px 70px -20px #000}
+  .rail.open{transform:none}
+  .menu-btn{display:inline-flex !important}
+  .content{padding:16px 14px 80px}
+  .g2,.g3,.g4{grid-template-columns:1fr}
+  .topbar{padding:11px 14px;gap:10px}
+  .tc{display:none}
+}
+.menu-btn{display:none}
+</style>
+</head>
+<body>
+
+<div class="app">
+  <!-- ======================= RAIL ======================= -->
+  <aside class="rail" id="rail">
+    <div class="brand">
+      <div class="brand-mark"></div>
+      <div>
+        <div class="brand-name">Flow Studio</div>
+        <div class="brand-sub">Local Filmmaking Suite</div>
+      </div>
+    </div>
+
+    <nav class="nav" id="nav">
+      <div class="nav-group">Workspace</div>
+      <button class="nav-item active" data-view="dashboard"><span class="nav-ico">◫</span> Dashboard</button>
+      <button class="nav-item" data-view="video"><span class="nav-ico">▶</span> AI Video Studio</button>
+      <button class="nav-item" data-view="image"><span class="nav-ico">◈</span> AI Image Studio</button>
+      <button class="nav-item" data-view="characters"><span class="nav-ico">◉</span> Character Library <span class="nav-badge" id="navCharCount">0</span></button>
+
+      <div class="nav-group">Story</div>
+      <button class="nav-item" data-view="storyboard"><span class="nav-ico">▤</span> Storyboard</button>
+      <button class="nav-item" data-view="timeline"><span class="nav-ico">▦</span> Timeline Editor</button>
+      <button class="nav-item" data-view="audio"><span class="nav-ico">♪</span> Audio Studio</button>
+
+      <div class="nav-group">System</div>
+      <button class="nav-item" data-view="assets"><span class="nav-ico">⬒</span> Asset Library</button>
+      <button class="nav-item" data-view="models"><span class="nav-ico">⬢</span> Model Manager</button>
+      <button class="nav-item" data-view="export"><span class="nav-ico">⤓</span> Export Center</button>
+      <button class="nav-item" data-view="settings"><span class="nav-ico">⚙</span> Settings</button>
+    </nav>
+
+    <div class="rail-foot">
+      <div class="status-pill" id="backendPill">
+        <span class="dot warn" id="backendDot"></span>
+        <span id="backendText">Checking local backend…</span>
+      </div>
+      <button class="btn btn-sm btn-block btn-ghost" id="btnQuickConnect">Reconnect backend</button>
+    </div>
+  </aside>
+
+  <!-- ======================= MAIN ======================= -->
+  <div class="main">
+    <header class="topbar">
+      <button class="btn btn-sm btn-ghost menu-btn" id="menuBtn">☰</button>
+      <div class="crumb">Flow Studio <span style="opacity:.4">/</span> <b id="crumbView">Dashboard</b></div>
+      <div class="topbar-spacer"></div>
+      <div class="proj-select" id="projSelect" title="Active project">
+        <span style="opacity:.55">PROJECT</span> <b id="projName">Untitled Film</b>
+      </div>
+      <div class="tc" id="topTimecode">00:00:00:00</div>
+      <button class="btn btn-sm btn-primary" id="btnNewProjectTop">＋ New Project</button>
+    </header>
+
+    <main class="content">
+
+      <!-- ============ DASHBOARD ============ -->
+      <section class="view active" id="view-dashboard">
+        <div class="page-head">
+          <div style="flex:1;min-width:280px">
+            <div class="eyebrow">Stage 1 · Workspace</div>
+            <h1>Your local film studio,<br>without the meter running.</h1>
+            <p class="lead">Everything here runs on your machine: generation, character consistency, editing and export. No credits, no watermark, no subscription gate. Costs are real hardware ones — GPU, electricity, disk — and they belong to you.</p>
+          </div>
+          <div style="display:flex;gap:10px;flex-wrap:wrap">
+            <button class="btn btn-primary" id="btnNewProject">＋ New Project</button>
+            <button class="btn" data-goto="models">Install models</button>
+            <button class="btn btn-ghost" data-goto="settings">Backend settings</button>
+          </div>
+        </div>
+
+        <div class="grid g4" style="margin-bottom:16px">
+          <div class="stat amber"><div class="k">Projects</div><div class="v" id="statProjects">0</div><div class="d">Stored locally in SQLite / browser store</div></div>
+          <div class="stat"><div class="k">Characters</div><div class="v" id="statChars">0</div><div class="d">Reusable identities with permanent IDs</div></div>
+          <div class="stat"><div class="k">Scenes</div><div class="v" id="statScenes">0</div><div class="d">Across the active project</div></div>
+          <div class="stat"><div class="k">Render jobs</div><div class="v" id="statJobs">0</div><div class="d" id="statJobsSub">Queue idle</div></div>
+        </div>
+
+        <div class="split">
+          <div class="panel">
+            <div class="panel-head"><h3>Projects</h3><div class="spacer"></div>
+              <button class="btn btn-sm btn-ghost" id="btnNewProject2">＋ New</button></div>
+            <div class="panel-body tight">
+              <div id="projectGrid" class="grid g2"></div>
+            </div>
+          </div>
+
+          <div class="grid" style="gap:16px">
+            <div class="panel">
+              <div class="panel-head"><h3>System status</h3><div class="spacer"></div><span class="tag" id="sysBackendTag">offline</span></div>
+              <div class="panel-body">
+                <div class="kv"><span class="k">Backend endpoint</span><span class="v" id="sysEndpoint">—</span></div>
+                <div class="kv"><span class="k">ComfyUI bridge</span><span class="v" id="sysComfy">—</span></div>
+                <div class="kv"><span class="k">GPU / compute</span><span class="v" id="sysGpu">detecting…</span></div>
+                <div class="kv"><span class="k">FFmpeg</span><span class="v" id="sysFfmpeg">—</span></div>
+                <div class="kv"><span class="k">Models installed</span><span class="v" id="sysModels">—</span></div>
+                <div class="kv"><span class="k">Local storage used</span><span class="v" id="sysStorage">—</span></div>
+              </div>
+              <div class="panel-foot">
+                <button class="btn btn-sm" id="btnTestBackend">Run diagnostics</button>
+                <button class="btn btn-sm btn-ghost" data-goto="models">Model manager</button>
+              </div>
+            </div>
+
+            <div class="panel">
+              <div class="panel-head"><h3>Render queue</h3><div class="spacer"></div>
+                <button class="btn btn-sm btn-ghost" id="btnClearJobs">Clear finished</button></div>
+              <div class="panel-body tight"><div id="dashJobs" class="list"></div></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel" style="margin-top:16px">
+          <div class="panel-head"><h3>What runs locally, and what it costs</h3></div>
+          <div class="panel-body">
+            <div class="grid g3">
+              <div>
+                <div class="label">Included at no charge</div>
+                <p style="font-size:12.5px;color:var(--ink-2)">Unlimited local generations, all editing tools, character library, timeline, export, project backup. Files you create are yours, at native resolution, with no watermark.</p>
+              </div>
+              <div>
+                <div class="label">Real costs you do pay</div>
+                <p style="font-size:12.5px;color:var(--ink-2)">GPU hardware and its electricity, storage for model weights and renders (video models are tens of GB), and your time while frames render. Optional cloud compute is opt-in and never enabled silently.</p>
+              </div>
+              <div>
+                <div class="label">Never</div>
+                <p style="font-size:12.5px;color:var(--ink-2)">No hidden paid API calls, no credit counters, no simulated generations, no placeholder clips dressed up as output. If a model can't do something, the UI does not offer it.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ VIDEO STUDIO ============ -->
+      <section class="view" id="view-video">
+        <div class="page-head">
+          <div style="flex:1;min-width:280px">
+            <div class="eyebrow">Stage 3 · Generation</div>
+            <h1>AI Video Studio</h1>
+            <p class="lead">Text-to-video, image-to-video, first/last-frame interpolation, reference-guided and character-consistent shots. Every control below is passed to the local model — nothing is decorative.</p>
+          </div>
+          <div style="display:flex;gap:9px;flex-wrap:wrap">
+            <button class="btn btn-ghost" id="btnVideoPayload">View request payload</button>
+            <button class="btn btn-primary" id="btnGenVideo">▶ Generate video</button>
+          </div>
+        </div>
+
+        <div class="split-wide">
+          <div class="grid" style="gap:16px">
+            <div class="panel">
+              <div class="panel-head"><h3>Shot description</h3><div class="spacer"></div><span class="tag amber" id="videoModeTag">text-to-video</span></div>
+              <div class="panel-body">
+                <div class="field">
+                  <div class="label">Prompt <span class="req">*</span></div>
+                  <textarea class="textarea" id="vPrompt" placeholder="Wide establishing shot: a lone figure walks through a rain-slicked neon alley, steam rising from vents, long lens, shallow depth of field, anamorphic flare, moody tungsten and teal light, 24fps cinematic"></textarea>
+                  <div class="hint">Describe subject, action, environment, lens/shot size, lighting and mood. Model capability varies — the model card in Model Manager lists what it actually supports.</div>
+                </div>
+                <div class="field">
+                  <div class="label">Negative prompt</div>
+                  <textarea class="textarea mono" id="vNegative" style="min-height:62px" placeholder="lowres, blurry, text, watermark, distorted hands, oversaturated, flicker, warped geometry"></textarea>
+                </div>
+
+                <div class="field">
+                  <div class="label">Generation mode</div>
+                  <div class="seg" id="videoModeSeg">
+                    <button class="on" data-mode="t2v">Text → Video</button>
+                    <button data-mode="i2v">Image → Video</button>
+                    <button data-mode="firstlast">First + Last frame</button>
+                    <button data-mode="reference">Reference-guided</button>
+                    <button data-mode="character">Character shot</button>
+                    <button data-mode="continue">Scene continuation</button>
+                    <button data-mode="v2v">Video → Video</button>
+                  </div>
+                </div>
+
+                <div class="row" id="videoInputs">
+                  <div class="field" style="flex:1;min-width:210px">
+                    <div class="label">First frame / source image</div>
+                    <input class="input" type="file" id="vFirstFrame" accept="image/*" />
+                  </div>
+                  <div class="field" style="flex:1;min-width:210px">
+                    <div class="label">Last frame</div>
+                    <input class="input" type="file" id="vLastFrame" accept="image/*" />
+                  </div>
+                  <div class="field" style="flex:1;min-width:210px">
+                    <div class="label">Reference / style image</div>
+                    <input class="input" type="file" id="vRef" accept="image/*" />
+                  </div>
+                  <div class="field" style="flex:1;min-width:210px">
+                    <div class="label">Source video (video-to-video)</div>
+                    <input class="input" type="file" id="vSourceVideo" accept="video/*" />
+                  </div>
+                </div>
+
+                <div class="field">
+                  <div class="label">Bound characters</div>
+                  <div id="vCharChips" style="display:flex;gap:8px;flex-wrap:wrap"></div>
+                  <div class="hint">Character references are sent with the generation request so identity can carry across shots. Consistency depends on the selected model's reference support — see its declared capabilities.</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="panel">
+              <div class="panel-head"><h3>Camera &amp; motion</h3><div class="spacer"></div><span class="tag" id="camSupportTag">checking model</span></div>
+              <div class="panel-body">
+                <div class="row">
+                  <div class="field">
+                    <div class="label">Camera movement</div>
+                    <select class="select" id="vCamera">
+                      <option value="static">Static / locked-off</option>
+                      <option value="pan_left">Pan left</option>
+                      <option value="pan_right">Pan right</option>
+                      <option value="tilt_up">Tilt up</option>
+                      <option value="tilt_down">Tilt down</option>
+                      <option value="dolly_in">Dolly in</option>
+                      <option value="dolly_out">Dolly out</option>
+                      <option value="orbit_left">Orbit left</option>
+                      <option value="orbit_right">Orbit right</option>
+                      <option value="crane_up">Crane up</option>
+                      <option value="handheld">Handheld</option>
+                      <option value="zoom_in">Zoom in</option>
+                    </select>
+                    <div class="hint">Camera controls are injected into the prompt and/or the model's motion conditioning, depending on backend support.</div>
+                  </div>
+                  <div class="field">
+                    <div class="label">Shot type</div>
+                    <select class="select" id="vShot">
+                      <option>Extreme wide</option><option>Wide</option><option>Medium</option>
+                      <option>Medium close-up</option><option>Close-up</option><option>Extreme close-up</option>
+                      <option>Over-the-shoulder</option><option>POV</option><option>Low angle</option><option>High angle</option>
+                    </select>
+                  </div>
+                  <div class="field">
+                    <div class="label">Motion intensity</div>
+                    <input type="range" id="vMotion" min="0" max="100" value="45" />
+                    <div class="hint"><span id="vMotionVal">45</span>% — lower is steadier, higher is more dynamic and less stable.</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="panel">
+              <div class="panel-head"><h3>Output</h3><div class="spacer"></div><span class="tag amber">native resolution preserved</span></div>
+              <div class="panel-body">
+                <div class="row">
+                  <div class="field">
+                    <div class="label">Aspect ratio</div>
+                    <div class="seg" id="vAspectSeg">
+                      <button class="on" data-ar="16:9">16:9</button>
+                      <button data-ar="9:16">9:16</button>
+                      <button data-ar="1:1">1:1</button>
+                      <button data-ar="4:3">4:3</button>
+                      <button data-ar="21:9">21:9</button>
+                      <button data-ar="custom">Custom</button>
+                    </div>
+                  </div>
+                  <div class="field" id="vCustomArWrap" style="display:none">
+                    <div class="label">Custom W × H</div>
+                    <div class="row" style="gap:8px">
+                      <input class="input mono" type="number" id="vWidth" value="1280" min="64" step="8" />
+                      <input class="input mono" type="number" id="vHeight" value="720" min="64" step="8" />
+                    </div>
+                  </div>
+                </div>
+
+                <div class="row">
+                  <div class="field">
+                    <div class="label">Resolution</div>
+                    <select class="select" id="vRes">
+                      <option value="480">480p</option>
+                      <option value="720" selected>720p</option>
+                      <option value="1080">1080p</option>
+                    </select>
+                    <div class="hint">Options are limited to what the selected model declares. Higher resolutions are only listed if the model manifest supports them.</div>
+                  </div>
+                  <div class="field">
+                    <div class="label">Frame rate</div>
+                    <select class="select" id="vFps"><option>16</option><option>24</option><option selected>25</option><option>30</option></select>
+                  </div>
+                  <div class="field">
+                    <div class="label">Duration (seconds)</div>
+                    <input class="input mono" type="number" id="vDuration" value="5" min="1" max="60" step="0.5" />
+                  </div>
+                  <div class="field">
+                    <div class="label">Variations</div>
+                    <input class="input mono" type="number" id="vVariations" value="1" min="1" max="8" />
+                  </div>
+                </div>
+
+                <div class="row">
+                  <div class="field">
+                    <div class="label">Seed</div>
+                    <div class="row" style="gap:8px">
+                      <input class="input mono" type="number" id="vSeed" value="-1" />
+                      <button class="btn btn-sm" id="btnVSeedRandom" type="button">Random</button>
+                      <label class="switch" style="margin-left:6px"><input type="checkbox" id="vSeedLock"><span class="track"></span> Lock</label>
+                    </div>
+                    <div class="hint">-1 = random per generation. Locking the seed reproduces a shot for iteration.</div>
+                  </div>
+                  <div class="field">
+                    <div class="label">Quality / performance preset</div>
+                    <select class="select" id="vQuality">
+                      <option value="draft">Draft — fast, fewer steps</option>
+                      <option value="balanced" selected>Balanced</option>
+                      <option value="quality">Quality — more steps</option>
+                      <option value="max">Maximum — slowest, highest steps</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div class="note">
+                  Exports keep the model's native output: original resolution, frame rate and aspect ratio. Flow Studio does not re-encode on download unless you ask for it, and never adds a watermark. Upscaling can increase pixel count but cannot recover detail the model never generated.
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- right column -->
+          <div class="grid" style="gap:16px">
+            <div class="panel">
+              <div class="panel-head"><h3>Monitor</h3><div class="spacer"></div><span class="tag" id="vModelTag">no model selected</span></div>
+              <div class="panel-body">
+                <div class="field">
+                  <div class="label">Model</div>
+                  <select class="select" id="vModel"></select>
+                  <div class="hint" id="vModelInfo">Model requirements and licence appear here.</div>
+                </div>
+                <div class="frame" id="videoMonitor" style="aspect-ratio:16/9">
+                  <div class="corner c1"></div><div class="corner c2"></div><div class="corner c3"></div><div class="corner c4"></div>
+                  <div class="osd">FLOW · MONITOR</div>
+                  <div class="osd-r" id="vMonitorRes">— × —</div>
+                  <div class="placeholder" id="videoMonitorText">No render yet<br>generation output appears here</div>
+                </div>
+                <div style="margin-top:11px">
+                  <div class="bar" id="vProgressBar"><i style="width:0%"></i></div>
+                  <div class="hint" id="vProgressText">Idle. Connect the local backend to generate.</div>
+                </div>
+              </div>
+              <div class="panel-foot">
+                <button class="btn btn-sm btn-primary" id="btnGenVideo2">Generate</button>
+                <button class="btn btn-sm btn-ghost" id="btnVSendToTimeline">Send to timeline</button>
+                <button class="btn btn-sm btn-ghost" id="btnVSaveAsset">Save to assets</button>
+              </div>
+            </div>
+
+            <div class="panel">
+              <div class="panel-head"><h3>Job queue</h3><div class="spacer"></div><span class="tag" id="vQueueCount">0</span></div>
+              <div class="panel-body tight"><div id="videoQueue" class="list"></div></div>
+            </div>
+
+            <div class="panel">
+              <div class="panel-head"><h3>Backend request</h3><div class="spacer"></div><button class="btn btn-sm btn-ghost" id="btnCopyPayload">Copy</button></div>
+              <div class="panel-body tight"><pre id="vPayloadPreview">// payload preview</pre></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ IMAGE STUDIO ============ -->
+      <section class="view" id="view-image">
+        <div class="page-head">
+          <div style="flex:1;min-width:280px">
+            <div class="eyebrow">Stage 2 · Generation</div>
+            <h1>AI Image Studio</h1>
+            <p class="lead">Concept art, character references, style frames, backgrounds, inpainting and outpainting — plus genuine local canvas tools for crop, resize and lossless export.</p>
+          </div>
+          <div style="display:flex;gap:9px;flex-wrap:wrap">
+            <button class="btn btn-ghost" id="btnExportPng">⤓ Export PNG (native)</button>
+            <button class="btn btn-primary" id="btnGenImage">◈ Generate image</button>
+          </div>
+        </div>
+
+        <div class="split-wide">
+          <div class="grid" style="gap:16px">
+            <div class="panel">
+              <div class="panel-head"><h3>Image generation</h3><div class="spacer"></div><span class="tag amber" id="iModeTag">text-to-image</span></div>
+              <div class="panel-body">
+                <div class="field">
+                  <div class="label">Prompt <span class="req">*</span></div>
+                  <textarea class="textarea" id="iPrompt" placeholder="Cinematic portrait of a weathered explorer, warm rim light, 85mm, shallow depth of field, film grain, muted teal and amber palette"></textarea>
+                </div>
+                <div class="field">
+                  <div class="label">Negative prompt</div>
+                  <textarea class="textarea mono" id="iNegative" style="min-height:58px" placeholder="lowres, text, watermark, extra fingers, deformed, oversaturated"></textarea>
+                </div>
+                <div class="field">
+                  <div class="label">Mode</div>
+                  <div class="seg" id="iModeSeg">
+                    <button class="on" data-mode="txt2img">Text → Image</button>
+                    <button data-mode="img2img">Image → Image</button>
+                    <button data-mode="inpaint">Inpaint</button>
+                    <button data-mode="outpaint">Outpaint</button>
+                  </div>
+                </div>
+                <div class="row">
+                  <div class="field" style="flex:1;min-width:220px">
+                    <div class="label">Source image (img2img / inpaint / outpaint)</div>
+                    <input class="input" type="file" id="iSource" accept="image/*" />
+                  </div>
+                  <div class="field">
+                    <div class="label">Denoise strength</div>
+                    <input type="range" id="iDenoise" min="0" max="100" value="62" />
+                    <div class="hint"><span id="iDenoiseVal">0.62</span> — how much the model may deviate from the source.</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="panel">
+              <div class="panel-head"><h3>Canvas &amp; mask</h3><div class="spacer"></div>
+                <button class="btn btn-sm btn-ghost" id="btnClearMask">Clear mask</button>
+                <button class="btn btn-sm btn-ghost" id="btnMaskMode">Brush: paint</button>
+              </div>
+              <div class="panel-body">
+                <div class="canvas-wrap"><canvas id="iCanvas" width="1024" height="576"></canvas></div>
+                <div class="row" style="margin-top:11px">
+                  <div class="field"><div class="label">Brush size</div><input type="range" id="iBrush" min="8" max="180" value="52" /></div>
+                  <div class="field"><div class="label">Local resize (no AI)</div>
+                    <div class="row" style="gap:8px">
+                      <input class="input mono" type="number" id="iWidth" value="1024" step="8" />
+                      <input class="input mono" type="number" id="iHeight" value="576" step="8" />
+                      <button class="btn btn-sm" id="btnLocalResize">Apply</button>
+                    </div>
+                  </div>
+                </div>
+                <div class="hint">The mask is what the model will regenerate. Painting happens locally in your browser — nothing is uploaded until you press Generate.</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="grid" style="gap:16px">
+            <div class="panel">
+              <div class="panel-head"><h3>Image settings</h3></div>
+              <div class="panel-body">
+                <div class="field"><div class="label">Model</div><select class="select" id="iModel"></select><div class="hint" id="iModelInfo">Model requirements and licence appear here.</div></div>
+                <div class="row">
+                  <div class="field"><div class="label">Steps</div><input class="input mono" type="number" id="iSteps" value="28" min="1" max="150" /></div>
+                  <div class="field"><div class="label">CFG scale</div><input class="input mono" type="number" id="iCfg" value="6.5" min="1" max="20" step="0.5" /></div>
+                </div>
+                <div class="row">
+                  <div class="field"><div class="label">Seed</div><input class="input mono" type="number" id="iSeed" value="-1" /></div>
+                  <div class="field"><div class="label">Variations</div><input class="input mono" type="number" id="iVariations" value="1" min="1" max="8" /></div>
+                </div>
+                <div class="field">
+                  <div class="label">Sampler</div>
+                  <select class="select" id="iSampler">
+                    <option value="euler">Euler</option><option value="euler_ancestral">Euler a</option>
+                    <option value="dpmpp_2m">DPM++ 2M</option><option value="dpmpp_2m_sde">DPM++ 2M SDE</option>
+                    <option value="ddim">DDIM</option>
+                  </select>
+                </div>
+                <div class="field">
+                  <div class="label">Style / character reference</div>
+                  <input class="input" type="file" id="iRef" accept="image/*" multiple />
+                </div>
+                <div class="note green">Export is lossless PNG at the exact canvas dimensions — no resizing, no compression, no watermark.</div>
+              </div>
+            </div>
+
+            <div class="panel">
+              <div class="panel-head"><h3>Output</h3><div class="spacer"></div><span class="tag" id="iJobTag">idle</span></div>
+              <div class="panel-body tight"><div id="imageResults" class="grid" style="grid-template-columns:1fr 1fr;gap:10px"></div></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ CHARACTERS ============ -->
+      <section class="view" id="view-characters">
+        <div class="page-head">
+          <div style="flex:1;min-width:280px">
+            <div class="eyebrow">Stage 4 · Consistency</div>
+            <h1>Character Library</h1>
+            <p class="lead">Build identities once, reuse them everywhere. Each character keeps a permanent ID, multiple reference photographs, and structured descriptors for face, hair, build, age and wardrobe.</p>
+          </div>
+          <button class="btn btn-primary" id="btnNewChar">＋ Create character</button>
+        </div>
+
+        <div class="split">
+          <div class="panel">
+            <div class="panel-head"><h3>Cast</h3><div class="spacer"></div><input class="input" id="charSearch" placeholder="Search characters…" style="max-width:220px;padding:6px 10px" /></div>
+            <div class="panel-body"><div id="charGrid" class="grid g3"></div></div>
+          </div>
+
+          <div class="grid" style="gap:16px">
+            <div class="panel">
+              <div class="panel-head"><h3>Selected character</h3><div class="spacer"></div><span class="tag" id="charIdTag">no selection</span></div>
+              <div class="panel-body" id="charDetail">
+                <div class="empty">Select a character to edit<br>identity, references and prompt block</div>
+              </div>
+            </div>
+            <div class="panel">
+              <div class="panel-head"><h3>Consistency guidance</h3></div>
+              <div class="panel-body">
+                <p style="font-size:12.5px;color:var(--ink-2)">Consistency is a property of the model, not of this interface. Reference-conditioned models (for example IP-Adapter-style conditioning or native reference support) hold identity far better than prompt-only workflows.</p>
+                <div class="note">Use 3–8 reference photos with varied angles and consistent wardrobe. Keep the descriptor block identical across scenes. Expect drift in long sequences; re-anchor with a first frame taken from the previous shot's final frame.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ STORYBOARD ============ -->
+      <section class="view" id="view-storyboard">
+        <div class="page-head">
+          <div style="flex:1;min-width:280px">
+            <div class="eyebrow">Stage 4 · Story</div>
+            <h1>Storyboard &amp; Scene Builder</h1>
+            <p class="lead">Turn an idea into structured scenes, assign characters and camera direction, generate clips shot by shot, and continue each scene from the previous one's last frame.</p>
+          </div>
+          <div style="display:flex;gap:9px;flex-wrap:wrap">
+            <button class="btn btn-ghost" id="btnAddScene">＋ Add scene</button>
+            <button class="btn" id="btnBreakdownLocal">Local breakdown</button>
+            <button class="btn btn-primary" id="btnBreakdownAI">✦ AI breakdown</button>
+          </div>
+        </div>
+
+        <div class="panel" style="margin-bottom:16px">
+          <div class="panel-head"><h3>Story idea</h3><div class="spacer"></div><span class="tag" id="breakdownTag">deterministic local tool</span></div>
+          <div class="panel-body">
+            <div class="row">
+              <div class="field" style="flex:2;min-width:260px">
+                <div class="label">Idea / logline</div>
+                <textarea class="textarea" id="storyIdea" style="min-height:70px" placeholder="A retired deep-sea welder returns to the ocean floor to recover a lost recording, discovering the wreck is still transmitting."></textarea>
+              </div>
+              <div class="field" style="flex:1;min-width:180px">
+                <div class="label">Tone &amp; visual style</div>
+                <input class="input" id="storyStyle" value="cinematic, anamorphic, teal and tungsten, 35mm film grain" />
+              </div>
+              <div class="field" style="min-width:150px">
+                <div class="label">Target scene count</div>
+                <input class="input mono" type="number" id="storySceneCount" value="6" min="1" max="40" />
+              </div>
+            </div>
+            <div class="hint">"Local breakdown" splits your idea into beats deterministically — it is a script tool, not an LLM call, and is labelled as such. "AI breakdown" calls the local backend model if one is configured.</div>
+          </div>
+        </div>
+
+        <div class="panel" style="margin-bottom:16px">
+          <div class="panel-head"><h3>Scene strip</h3><div class="spacer"></div>
+            <button class="btn btn-sm btn-ghost" id="btnGenAllScenes">Generate all clips</button>
+            <button class="btn btn-sm btn-ghost" id="btnAddAllToTimeline">Add all to timeline</button>
+          </div>
+          <div class="sprocket"></div>
+          <div class="panel-body tight"><div class="strip" id="sceneStrip"></div></div>
+          <div class="sprocket"></div>
+        </div>
+
+        <div class="split">
+          <div class="panel">
+            <div class="panel-head"><h3>Scene editor</h3><div class="spacer"></div><span class="tag" id="sceneEditTag">no scene</span></div>
+            <div class="panel-body" id="sceneEditor">
+              <div class="empty">Pick a scene from the strip above</div>
+            </div>
+          </div>
+
+          <div class="grid" style="gap:16px">
+            <div class="panel">
+              <div class="panel-head"><h3>Sequence preview</h3><div class="spacer"></div>
+                <button class="btn btn-sm btn-primary" id="btnPlaySequence">▶ Play</button></div>
+              <div class="panel-body">
+                <div class="frame" id="sequenceFrame" style="aspect-ratio:16/9">
+                  <div class="corner c1"></div><div class="corner c2"></div><div class="corner c3"></div><div class="corner c4"></div>
+                  <div class="osd" id="seqOsd">SEQ · 00:00:00:00</div>
+                  <video id="seqVideo" style="display:none;width:100%;height:100%;object-fit:contain;background:#000"></video>
+                  <div class="placeholder" id="seqPlaceholder">Sequence preview<br>plays generated clips in order</div>
+                </div>
+              </div>
+            </div>
+            <div class="panel">
+              <div class="panel-head"><h3>Continuity</h3></div>
+              <div class="panel-body">
+                <label class="switch" style="margin-bottom:10px"><input type="checkbox" id="continueChain" checked><span class="track"></span> Use previous scene's last frame as next first frame</label>
+                <label class="switch" style="margin-bottom:10px"><input type="checkbox" id="carryCharacters" checked><span class="track"></span> Carry assigned characters into prompts</label>
+                <label class="switch"><input type="checkbox" id="carryStyle" checked><span class="track"></span> Append project style block to every prompt</label>
+                <div class="note" style="margin-top:12px">Chaining first/last frames is the most reliable way to keep wardrobe, lighting and geography continuous across a sequence.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ TIMELINE ============ -->
+      <section class="view" id="view-timeline">
+        <div class="page-head">
+          <div style="flex:1;min-width:280px">
+            <div class="eyebrow">Stage 6 · Editing</div>
+            <h1>Timeline Editor</h1>
+            <p class="lead">Multi-track arrangement with video, audio and subtitle lanes, transitions, trimming and speed control. Final rendering is done by FFmpeg on your machine at full quality.</p>
+          </div>
+          <div style="display:flex;gap:9px;flex-wrap:wrap">
+            <button class="btn btn-ghost" id="btnRenderPreview">⤓ Render preview (WebM)</button>
+            <button class="btn btn-primary" id="btnRenderFinal">Render master (FFmpeg)</button>
+          </div>
+        </div>
+
+        <div class="panel" style="margin-bottom:16px">
+          <div class="panel-body">
+            <div class="frame" id="editPreview" style="aspect-ratio:16/9">
+              <div class="corner c1"></div><div class="corner c2"></div><div class="corner c3"></div><div class="corner c4"></div>
+              <div class="osd">PROGRAM</div>
+              <div class="osd-r" id="editTc">00:00:00:00</div>
+              <video id="editVideo" style="display:none;width:100%;height:100%;object-fit:contain;background:#000"></video>
+              <div class="placeholder" id="editPlaceholder">Program monitor<br>add clips to the timeline below</div>
+            </div>
+            <div class="row" style="margin-top:12px;align-items:center">
+              <button class="btn btn-sm btn-primary" id="btnEditPlay">▶ Play</button>
+              <button class="btn btn-sm btn-ghost" id="btnEditStop">■ Stop</button>
+              <div style="flex:1;min-width:180px"><div class="bar"><i id="editProgressBar" style="width:0%"></i></div></div>
+              <div class="tc" id="editTime">00:00 / 00:00</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-head"><h3>Tracks</h3><div class="spacer"></div>
+            <button class="btn btn-sm btn-ghost" id="btnAddClip">＋ Add clip</button>
+            <button class="btn btn-sm btn-ghost" id="btnAddSubtitleTrack">＋ Subtitle track</button>
+            <button class="btn btn-sm btn-ghost" id="btnClearTimeline">Clear</button>
+          </div>
+          <div class="panel-body">
+            <div class="tl" id="timeline">
+              <div class="tl-ruler" id="tlRuler"></div>
+              <div class="tl-track"><div class="tl-label">V1 · Video</div><div class="tl-lane" id="laneVideo"></div></div>
+              <div class="tl-track"><div class="tl-label">V2 · Overlay</div><div class="tl-lane" id="laneOverlay"></div></div>
+              <div class="tl-track"><div class="tl-label">A1 · Dialogue</div><div class="tl-lane" id="laneAudio"></div></div>
+              <div class="tl-track"><div class="tl-label">A2 · Music</div><div class="tl-lane" id="laneMusic"></div></div>
+              <div class="tl-track"><div class="tl-label">T1 · Subtitles</div><div class="tl-lane" id="laneText"></div></div>
+            </div>
+            <div class="hint">Drag clips to reorder. Select a clip to edit in/out points, speed and transition in the inspector.</div>
+          </div>
+          <div class="panel-foot">
+            <div style="flex:1;min-width:200px"><div class="bar" id="renderBar"><i style="width:0%"></i></div></div>
+            <div class="hint" id="renderStatus" style="margin:0">Renderer idle</div>
+          </div>
+        </div>
+
+        <div class="grid g2" style="margin-top:16px">
+          <div class="panel">
+            <div class="panel-head"><h3>Clip inspector</h3><div class="spacer"></div><span class="tag" id="clipTag">no clip</span></div>
+            <div class="panel-body" id="clipInspector">
+              <div class="empty">Select a timeline clip</div>
+            </div>
+          </div>
+          <div class="panel">
+            <div class="panel-head"><h3>FFmpeg render plan</h3><div class="spacer"></div><button class="btn btn-sm btn-ghost" id="btnCopyFfmpeg">Copy</button></div>
+            <div class="panel-body tight"><pre id="ffmpegCmd">// render plan appears here</pre></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ AUDIO ============ -->
+      <section class="view" id="view-audio">
+        <div class="page-head">
+          <div style="flex:1;min-width:280px">
+            <div class="eyebrow">Stage 5 · Sound</div>
+            <h1>Audio Studio</h1>
+            <p class="lead">Dialogue and voiceover, local text-to-speech, imported music and effects, mixing, synchronisation and subtitle generation.</p>
+          </div>
+          <div style="display:flex;gap:9px;flex-wrap:wrap">
+            <button class="btn btn-ghost" id="btnImportAudio">⤒ Import audio</button>
+            <button class="btn btn-primary" id="btnTTS">♪ Speak line</button>
+          </div>
+        </div>
+
+        <div class="split">
+          <div class="grid" style="gap:16px">
+            <div class="panel">
+              <div class="panel-head"><h3>Text to speech</h3><div class="spacer"></div><span class="tag" id="ttsEngineTag">browser engine</span></div>
+              <div class="panel-body">
+                <div class="field"><div class="label">Line</div><textarea class="textarea" id="ttsText" placeholder="We go back down at first light. Bring the recorder — and leave the lights off."></textarea></div>
+                <div class="row">
+                  <div class="field"><div class="label">Voice</div><select class="select" id="ttsVoice"></select></div>
+                  <div class="field"><div class="label">Rate</div><input type="range" id="ttsRate" min="60" max="160" value="95" /><div class="hint"><span id="ttsRateVal">0.95</span>×</div></div>
+                  <div class="field"><div class="label">Pitch</div><input type="range" id="ttsPitch" min="50" max="180" value="100" /><div class="hint"><span id="ttsPitchVal">1.00</span></div></div>
+                </div>
+                <div class="row">
+                  <div class="field"><div class="label">Character</div><select class="select" id="ttsCharacter"><option value="">Unassigned</option></select></div>
+                  <div class="field"><div class="label">Scene binding</div><select class="select" id="ttsScene"><option value="">Unassigned</option></select></div>
+                </div>
+                <div class="note blue">Browser speech synthesis previews instantly and works offline, but its audio stream cannot be captured by the exporter. To render dialogue into the final mix, use the backend TTS engine (Piper or equivalent) from the Model Manager — it returns a real WAV file.</div>
+              </div>
+              <div class="panel-foot">
+                <button class="btn btn-sm" id="btnTTSPreview">Preview</button>
+                <button class="btn btn-sm btn-ghost" id="btnTTSBackend">Render WAV (backend)</button>
+                <button class="btn btn-sm btn-ghost" id="btnRecord">● Record voiceover</button>
+              </div>
+            </div>
+
+            <div class="panel">
+              <div class="panel-head"><h3>Subtitles</h3><div class="spacer"></div>
+                <button class="btn btn-sm btn-ghost" id="btnGenSubs">Generate from dialogue</button>
+                <button class="btn btn-sm btn-ghost" id="btnExportSrt">⤓ Export SRT</button></div>
+              <div class="panel-body tight"><pre id="subtitleOut" style="min-height:150px">// subtitle cues appear here</pre></div>
+            </div>
+          </div>
+
+          <div class="grid" style="gap:16px">
+            <div class="panel">
+              <div class="panel-head"><h3>Transport</h3><div class="spacer"></div><span class="tag" id="audioState">stopped</span></div>
+              <div class="panel-body">
+                <div class="row" style="align-items:center">
+                  <button class="btn btn-sm btn-primary" id="btnAudioPlay">▶</button>
+                  <button class="btn btn-sm btn-ghost" id="btnAudioStop">■</button>
+                  <div class="meter" id="audioMeter" style="flex:1"></div>
+                </div>
+                <div class="row" style="margin-top:12px">
+                  <div class="field"><div class="label">Master</div><input type="range" id="mixMaster" min="0" max="150" value="100" /></div>
+                  <div class="field"><div class="label">Dialogue</div><input type="range" id="mixDialogue" min="0" max="150" value="100" /></div>
+                  <div class="field"><div class="label">Music</div><input type="range" id="mixMusic" min="0" max="150" value="60" /></div>
+                  <div class="field"><div class="label">Effects</div><input type="range" id="mixSfx" min="0" max="150" value="85" /></div>
+                </div>
+                <label class="switch"><input type="checkbox" id="duckMusic" checked><span class="track"></span> Duck music under dialogue (−12 dB)</label>
+              </div>
+            </div>
+
+            <div class="panel">
+              <div class="panel-head"><h3>Audio assets</h3><div class="spacer"></div><span class="tag" id="audioCount">0</span></div>
+              <div class="panel-body tight"><div id="audioList" class="list"></div></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ ASSETS ============ -->
+      <section class="view" id="view-assets">
+        <div class="page-head">
+          <div style="flex:1;min-width:280px">
+            <div class="eyebrow">Local storage</div>
+            <h1>Asset Library</h1>
+            <p class="lead">Everything you generate or import is stored on your machine in the project library. Files are exported at original resolution with no recompression.</p>
+          </div>
+          <div style="display:flex;gap:9px">
+            <input class="input" id="assetSearch" placeholder="Filter assets…" style="max-width:220px" />
+            <button class="btn btn-primary" id="btnImportAsset">⤒ Import</button>
+          </div>
+        </div>
+        <div class="panel">
+          <div class="panel-head"><h3>All assets</h3><div class="spacer"></div>
+            <div class="seg" id="assetFilter" style="max-width:340px">
+              <button class="on" data-f="all">All</button><button data-f="image">Images</button>
+              <button data-f="video">Video</button><button data-f="audio">Audio</button>
+            </div>
+          </div>
+          <div class="panel-body"><div id="assetGrid" class="grid g4"></div></div>
+        </div>
+      </section>
+
+      <!-- ============ MODELS ============ -->
+      <section class="view" id="view-models">
+        <div class="page-head">
+          <div style="flex:1;min-width:280px">
+            <div class="eyebrow">Stage 2–5 · Engines</div>
+            <h1>Model Manager</h1>
+            <p class="lead">Freely downloadable, locally executed models. Each entry lists its licence, hardware demand and declared capabilities — the interface only exposes capabilities the model actually declares.</p>
+          </div>
+          <button class="btn btn-primary" id="btnRefreshModels">⟳ Refresh from backend</button>
+        </div>
+
+        <div class="note" style="margin-bottom:16px">
+          Figures below are indicative and reflect information available to me up to May 2025. Model releases move quickly (including the Wan series), so always verify current requirements and licence text against the official model card before installing. Flow Studio does not restate a capability a model has not declared.
+        </div>
+
+        <div class="panel">
+          <div class="panel-head"><h3>Installed &amp; available models</h3><div class="spacer"></div><span class="tag" id="modelCount">—</span></div>
+          <div class="panel-body tight"><div id="modelList"></div></div>
+        </div>
+
+        <div class="grid g2" style="margin-top:16px">
+          <div class="panel">
+            <div class="panel-head"><h3>Installation</h3></div>
+            <div class="panel-body">
+              <pre># 1. Create the environment
+python -m venv .venv
+.venv\Scripts\activate        # Windows
+source .venv/bin/activate     # Linux / macOS
+
+# 2. Backend + ComfyUI bridge
+pip install -r requirements.txt
+
+# 3. ComfyUI (recommended local engine)
+git clone https://github.com/comfyanonymous/ComfyUI
+cd ComfyUI &amp;&amp; pip install -r requirements.txt
+python main.py --listen 127.0.0.1 --port 8188
+
+# 4. Download weights (example, huggingface-cli)
+pip install -U "huggingface_hub[cli]"
+huggingface-cli download stabilityai/stable-diffusion-xl-base-1.0 \
+  --local-dir models/checkpoints/sdxl-base
+
+# 5. Start Flow Studio backend
+uvicorn server:app --host 127.0.0.1 --port 8000</pre>
+              <div class="hint">Weights are large (image models ~2–7 GB, video models commonly 20–60 GB+). Plan disk space accordingly.</div>
+            </div>
+          </div>
+          <div class="panel">
+            <div class="panel-head"><h3>Licensing &amp; usage</h3></div>
+            <div class="panel-body">
+              <div class="kv"><span class="k">Stable Diffusion XL</span><span class="v">CreativeML OpenRAIL++-M</span></div>
+              <div class="kv"><span class="k">Stable Diffusion 3.5</span><span class="v">Stability Community Licence</span></div>
+              <div class="kv"><span class="k">FLUX.1-schnell</span><span class="v">Apache 2.0</span></div>
+              <div class="kv"><span class="k">FLUX.1-dev</span><span class="v">FLUX.1 [dev] Non-Commercial</span></div>
+              <div class="kv"><span class="k">Wan series (video)</span><span class="v">see official model card</span></div>
+              <div class="kv"><span class="k">LTX-Video</span><span class="v">Lightricks LTXV licence</span></div>
+              <div class="kv"><span class="k">Piper TTS</span><span class="v">MIT</span></div>
+              <div class="kv"><span class="k">Kokoro TTS</span><span class="v">Apache 2.0</span></div>
+              <div class="kv"><span class="k">MusicGen</span><span class="v">MIT</span></div>
+              <div class="note" style="margin-top:12px">Some licences restrict commercial use or require attribution. Flow Studio stores the licence text alongside each model and shows it at install time — you are responsible for complying with the terms of the weights you download.</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ EXPORT ============ -->
+      <section class="view" id="view-export">
+        <div class="page-head">
+          <div style="flex:1;min-width:280px">
+            <div class="eyebrow">Stage 7 · Delivery</div>
+            <h1>Export Center</h1>
+            <p class="lead">Master files rendered by FFmpeg at full quality. Configurable codec and bitrate, optional lossless paths, original frame rate and aspect ratio preserved. No watermark is ever applied.</p>
+          </div>
+        </div>
+
+        <div class="split">
+          <div class="panel">
+            <div class="panel-head"><h3>Export settings</h3><div class="spacer"></div><span class="tag amber">no watermark</span></div>
+            <div class="panel-body">
+              <div class="row">
+                <div class="field"><div class="label">Container</div>
+                  <select class="select" id="expFormat"><option value="mp4">MP4</option><option value="mov">MOV</option><option value="mkv">MKV</option><option value="webm">WebM</option></select></div>
+                <div class="field"><div class="label">Video codec</div>
+                  <select class="select" id="expCodec">
+                    <option value="libx264">H.264 (libx264)</option>
+                    <option value="libx265">H.265 / HEVC (libx265)</option>
+                    <option value="prores_ks">ProRes 422 (prores_ks)</option>
+                    <option value="ffv1">FFV1 lossless</option>
+                    <option value="vp9">VP9</option>
+                  </select></div>
+                <div class="field"><div class="label">Preset</div>
+                  <select class="select" id="expPreset">
+                    <option value="fast">Fast</option><option value="medium" selected>Medium</option>
+                    <option value="slow">Slow</option><option value="veryslow">Very slow (best)</option>
+                  </select></div>
+              </div>
+              <div class="row">
+                <div class="field"><div class="label">Rate control</div>
+                  <select class="select" id="expRate"><option value="crf">CRF (quality)</option><option value="bitrate">Target bitrate</option><option value="lossless">Lossless</option></select></div>
+                <div class="field"><div class="label">CRF</div><input class="input mono" type="number" id="expCrf" value="16" min="0" max="51" /></div>
+                <div class="field"><div class="label">Bitrate (Mbps)</div><input class="input mono" type="number" id="expBitrate" value="40" min="1" max="800" /></div>
+                <div class="field"><div class="label">Frame rate</div>
+                  <select class="select" id="expFps"><option value="source">Match source</option><option>24</option><option>25</option><option>30</option><option>60</option></select></div>
+              </div>
+              <div class="row">
+                <div class="field"><div class="label">Audio codec</div>
+                  <select class="select" id="expAudioCodec"><option value="aac">AAC 320k</option><option value="flac">FLAC lossless</option><option value="opus">Opus 256k</option><option value="none">No audio</option></select></div>
+                <div class="field"><div class="label">Resolution</div>
+                  <select class="select" id="expRes"><option value="source">Native / source</option><option value="1080">1080p</option><option value="2160">2160p</option></select></div>
+                <div class="field"><div class="label">Filename</div><input class="input mono" id="expName" value="flow_master_v1" /></div>
+              </div>
+              <div class="note">
+                Choosing "Native / source" streams copies where possible, so nothing is re-encoded. Upscaling to a larger resolution adds pixels, not detail — Flow Studio will not describe an upscale as restoring detail.
+              </div>
+            </div>
+            <div class="panel-foot">
+              <button class="btn btn-primary" id="btnExport">⤓ Start export</button>
+              <button class="btn btn-ghost" id="btnExportUpdate">Update FFmpeg plan</button>
+              <div style="flex:1;min-width:160px"><div class="bar" id="expBar"><i style="width:0%"></i></div></div>
+            </div>
+          </div>
+
+          <div class="grid" style="gap:16px">
+            <div class="panel">
+              <div class="panel-head"><h3>FFmpeg command</h3><div class="spacer"></div><button class="btn btn-sm btn-ghost" id="btnCopyExpCmd">Copy</button></div>
+              <div class="panel-body tight"><pre id="expCmd">// configure export to build the command</pre></div>
+            </div>
+            <div class="panel">
+              <div class="panel-head"><h3>Export history</h3><div class="spacer"></div><span class="tag" id="expCount">0</span></div>
+              <div class="panel-body tight"><div id="exportQueue" class="list"></div></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ SETTINGS ============ -->
+      <section class="view" id="view-settings">
+        <div class="page-head">
+          <div style="flex:1;min-width:280px">
+            <div class="eyebrow">Configuration</div>
+            <h1>Settings</h1>
+            <p class="lead">Backend connection, storage locations, quality defaults, project backup and restore.</p>
+          </div>
+          <button class="btn btn-primary" id="btnSaveSettings">Save settings</button>
+        </div>
+
+        <div class="split">
+          <div class="grid" style="gap:16px">
+            <div class="panel">
+              <div class="panel-head"><h3>Backend</h3><div class="spacer"></div><button class="btn btn-sm btn-ghost" id="btnTestBackend2">Test connection</button></div>
+              <div class="panel-body">
+                <div class="field"><div class="label">Flow Studio backend URL</div><input class="input mono" id="setBackendUrl" value="http://127.0.0.1:8000" /><div class="hint">The FastAPI service that wraps ComfyUI, FFmpeg and TTS. Local by default — Flow Studio never calls a paid service on your behalf.</div></div>
+                <div class="field"><div class="label">ComfyUI URL</div><input class="input mono" id="setComfyUrl" value="http://127.0.0.1:8188" /></div>
+                <div class="field"><div class="label">Model &amp; output directory</div><input class="input mono" id="setModelDir" value="./models" /></div>
+                <div class="field"><div class="label">Render output directory</div><input class="input mono" id="setOutputDir" value="./output" /></div>
+                <label class="switch" style="margin-bottom:10px"><input type="checkbox" id="setOfflineOnly" checked><span class="track"></span> Strictly offline — block any external network request</label>
+                <label class="switch"><input type="checkbox" id="setGpu"><span class="track"></span> Allow CPU fallback when VRAM is exhausted</label>
+              </div>
+            </div>
+
+            <div class="panel">
+              <div class="panel-head"><h3>Defaults</h3></div>
+              <div class="panel-body">
+                <div class="row">
+                  <div class="field"><div class="label">Default aspect ratio</div><select class="select" id="setDefaultAspect"><option>16:9</option><option>9:16</option><option>1:1</option><option>4:3</option><option>21:9</option></select></div>
+                  <div class="field"><div class="label">Quality preset</div><select class="select" id="setQuality"><option value="draft">Draft</option><option value="balanced">Balanced</option><option value="quality">Quality</option><option value="max">Maximum</option></select></div>
+                  <div class="field"><div class="label">Concurrent jobs</div><input class="input mono" type="number" id="setConcurrency" value="1" min="1" max="4" /></div>
+                </div>
+                <label class="switch" style="margin-bottom:10px"><input type="checkbox" id="setKeepNative" checked><span class="track"></span> Preserve native resolution and frame rate on export</label>
+                <label class="switch"><input type="checkbox" id="setAutoSave" checked><span class="track"></span> Auto-save project state after every change</label>
+              </div>
+            </div>
+          </div>
+
+          <div class="grid" style="gap:16px">
+            <div class="panel">
+              <div class="panel-head"><h3>Project data</h3></div>
+              <div class="panel-body">
+                <div class="kv"><span class="k">Project store</span><span class="v">SQLite (desktop) / IndexedDB (web)</span></div>
+                <div class="kv"><span class="k">Asset store</span><span class="v" id="setAssetStore">local</span></div>
+                <div class="kv"><span class="k">State version</span><span class="v" id="setVersion">v1</span></div>
+                <div class="row" style="margin-top:12px">
+                  <button class="btn btn-block" id="btnBackup">⤓ Backup project (.flow)</button>
+                  <button class="btn btn-block btn-ghost" id="btnRestore">⤒ Restore from backup</button>
+                  <input type="file" id="fileRestore" accept=".json,.flow" style="display:none" />
+                </div>
+                <div class="hint">Backups contain project structure, characters, scenes and settings. Media binaries stay in your local asset folder — point the restore at the same directory to relink.</div>
+              </div>
+            </div>
+
+            <div class="panel">
+              <div class="panel-head"><h3>Privacy &amp; cost disclosure</h3></div>
+              <div class="panel-body">
+                <div class="note green">Flow Studio performs no telemetry, no account creation and no licence activation. Generation runs on hardware you already paid for.</div>
+                <div class="note" style="margin-top:11px">If you enable a remote or cloud backend yourself, you are opting into that provider's costs and terms. Flow Studio will always display the active endpoint in the status bar before any generation runs.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+</div>
+
+<!-- ======================= MODALS ======================= -->
+<div class="modal-bg" id="modalBg">
+  <div class="modal" id="modal">
+    <div class="modal-head"><h3 id="modalTitle">Title</h3><div class="spacer" style="flex:1"></div>
+      <button class="btn btn-sm btn-ghost" id="modalClose">✕</button></div>
+    <div class="modal-body" id="modalBody"></div>
+    <div class="modal-foot" id="modalFoot"></div>
+  </div>
+</div>
+
+<div class="toasts" id="toasts"></div>
+
+<script>
+/* =====================================================================
+   FLOW STUDIO — application runtime
+   Local-first. All state persists in IndexedDB + localStorage.
+   Every generation action posts to the local backend; nothing is faked.
+   ===================================================================== */
+(function () {
+  "use strict";
+
+  const $  = (s, r) => (r || document).querySelector(s);
+  const $$ = (s, r) => Array.from((r || document).querySelectorAll(s));
+  const uid = (p) => (p || "id") + "_" + Math.random().toString(36).slice(2, 9) + Date.now().toString(36).slice(-4);
+  const clamp = (n, a, b) => Math.min(b, Math.max(a, n));
+  const fmtTime = (s) => {
+    s = Math.max(0, s || 0);
+    const m = Math.floor(s / 60), ss = Math.floor(s % 60);
+    return String(m).padStart(2, "0") + ":" + String(ss).padStart(2, "0");
+  };
+  const fmtTc = (sec, fps) => {
+    fps = fps || 25;
+    const f = Math.floor((sec % 1) * fps), s = Math.floor(sec) % 60, m = Math.floor(sec / 60) % 60, h = Math.floor(sec / 3600);
+    return [h, m, s, f].map((n) => String(n).padStart(2, "0")).join(":");
+  };
+
+  /* ---------------------------------------------------------------
+     1. Asset store (IndexedDB) — real local persistence for binaries
+     --------------------------------------------------------------- */
+  const IDB = {
+    db: null,
+    open() {
+      return new Promise((res, rej) => {
+        const req = indexedDB.open("flowstudio", 1);
+        req.onupgradeneeded = (e) => {
+          const db = e.target.result;
+          if (!db.objectStoreNames.contains("assets")) db.createObjectStore("assets", { keyPath: "id" });
+        };
+        req.onsuccess = (e) => { this.db = e.target.result; res(this.db); };
+        req.onerror = (e) => rej(e);
+      });
+    },
+    tx(mode) { return this.db.transaction("assets", mode).objectStore("assets"); },
+    put(rec) { return new Promise((res, rej) => { const r = this.tx("readwrite").put(rec); r.onsuccess = () => res(rec); r.onerror = rej; }); },
+    get(id) { return new Promise((res, rej) => { const r = this.tx("readonly").get(id); r.onsuccess = () => res(r.result); r.onerror = rej; }); },
+    all() { return new Promise((res, rej) => { const r = this.tx("readonly").getAll(); r.onsuccess = () => res(r.result || []); r.onerror = rej; }); },
+    del(id) { return new Promise((res, rej) => { const r = this.tx("readwrite").delete(id); r.onsuccess = () => res(); r.onerror = rej; }); }
+  };
+
+  /* ---------------------------------------------------------------
+     2. Application state
+     --------------------------------------------------------------- */
+  const DEFAULT_STATE = {
+    version: 1,
+    settings: {
+      backendUrl: "http://127.0.0.1:8000",
+      comfyUrl: "http://127.0.0.1:8188",
+      modelDir: "./models",
+      outputDir: "./output",
+      offlineOnly: true,
+      cpuFallback: true,
+      defaultAspect: "16:9",
+      quality: "balanced",
+      concurrency: 1,
+      keepNative: true,
+      autoSave: true
+    },
+    projects: [],
+    activeProjectId: null,
+    characters: [],
+    jobs: [],
+    exports: [],
+    timeline: { video: [], overlay: [], audio: [], music: [], text: [] },
+    models: []
+  };
+
+  let state = null;
+
+  function loadState() {
+    try {
+      const raw = localStorage.getItem("flowstudio.state.v1");
+      state = raw ? Object.assign({}, DEFAULT_STATE, JSON.parse(raw)) : JSON.parse(JSON.stringify(DEFAULT_STATE));
+    } catch (e) {
+      state = JSON.parse(JSON.stringify(DEFAULT_STATE));
+    }
+    if (!state.projects.length) {
+      const p = newProject("Untitled Film", true);
+      state.projects.push(p);
+      state.activeProjectId = p.id;
+    }
+    if (!state.settings) state.settings = DEFAULT_STATE.settings;
+  }
+  function saveState() {
+    if (state.settings.autoSave === false) return;
+    try { localStorage.setItem("flowstudio.state.v1", JSON.stringify(state)); } catch (e) { /* quota */ }
+  }
+  function newProject(name, silent) {
+    return {
+      id: uid("prj"), name: name || "Untitled Film",
+      style: "cinematic, anamorphic, 35mm film grain",
+      createdAt: Date.now(), updatedAt: Date.now(),
+      scenes: [],
+      meta: { aspect: "16:9", fps: 25 }
+    };
+  }
+  const activeProject = () => state.projects.find((p) => p.id === state.activeProjectId) || state.projects[0];
+
+  /* ---------------------------------------------------------------
+     3. Toast + modal helpers
+     --------------------------------------------------------------- */
+  function toast(msg, kind, sticky) {
+    const el = document.createElement("div");
+    el.className = "toast " + (kind || "ok");
+    const icon = kind === "err" ? "✕" : kind === "warn" ? "!" : "✓";
+    el.innerHTML = '<span class="t-ico">' + icon + '</span><div>' + msg + "</div>";
+    ("#toasts").appendChild(el);
+    if (!sticky) setTimeout(() => { el.style.opacity = "0"; el.style.transform = "translateX(18px)"; setTimeout(() => el.remove(), 250); }, 4600);
+  }
+  function modal(title, bodyHTML, buttons) {
+    $("#modalTitle").textContent = title;
+    $("#modalBody").innerHTML = bodyHTML;
+    const foot = $("#modalFoot");
+    foot.innerHTML = "";
+    (buttons || [{ label: "Close" }]).forEach((b) => {
+      const btn = document.createElement("button");
+      btn.className = "btn " + (b.primary ? "btn-primary" : b.danger ? "btn-danger" : "btn-ghost");
+      btn.textContent = b.label;
+      btn.onclick = () => { if (b.onClick) b.onClick(); if (b.keepOpen !== true) closeModal(); };
+      foot.appendChild(btn);
+    });
+    $("#modalBg").classList.add("open");
+  }
+  function closeModal() { $("#modalBg").classList.remove("open"); }
+  $("#modalClose").onclick = closeModal;
+  $("#modalBg").addEventListener("click", (e) => { if (e.target.id === "modalBg") closeModal(); });
+
+  /* ---------------------------------------------------------------
+     4. Backend client — real HTTP calls, honest failure states
+     --------------------------------------------------------------- */
+  const Api = {
+    health: null,
+    async request(path, opts) {
+      opts = opts || {};
+      const url = state.settings.backendUrl.replace(/\/$/, "") + path;
+      const ctrl = new AbortController();
+      const timer = setTimeout(() => ctrl.abort(), opts.timeout || 20000);
+      try {
+        const res = await fetch(url, {
+          method: opts.method || "GET",
+          headers: opts.body ? { "Content-Type": "application/json" } : undefined,
+          body: opts.body ? JSON.stringify(opts.body) : undefined,
+          signal: ctrl.signal
+        });
+        clearTimeout(timer);
+        if (!res.ok) throw new Error("HTTP " + res.status + " " + (await res.text().catch(() => "")).slice(0, 200));
+        const ct = res.headers.get("content-type") || "";
+        return ct.includes("json") ? res.json() : res.blob();
+      } catch (e) {
+        clearTimeout(timer);
+        throw e;
+      }
+    },
+    async checkHealth() {
+      try {
+        const h = await this.request("/api/health", { timeout: 6000 });
+        this.health = h;
+        setBackendStatus(true, h);
+        return h;
+      } catch (e) {
+        this.health = null;
+        setBackendStatus(false, { error: String(e.message || e) });
+        return null;
+      }
+    },
+    async models() {
+      try {
+        const m = await this.request("/api/models");
+        state.models = Array.isArray(m) ? m : (m.models || []);
+        renderModels();
+        return state.models;
+      } catch (e) { return state.models || []; }
+    },
+    generate(kind, payload) {
+      // kind: 'image' | 'video' | 'audio' | 'render'
+      return this.request("/api/generate/" + kind, { method: "POST", body: payload });
+    },
+    job(id) { return this.request("/api/jobs/" + id); }
+  };
+
+  function setBackendStatus(ok, info) {
+    const dot = $("#backendDot"), txt = $("#backendText"), tag = $("#sysBackendTag");
+    dot.className = "dot " + (ok ? "ok" : "err");
+    txt.textContent = ok ? "Backend connected · local" : "Backend offline";
+    if (tag) { tag.textContent = ok ? "connected" : "offline"; tag.className = "tag " + (ok ? "ok" : "err"); }
+    if (ok) {
+      $("#sysEndpoint").textContent = state.settings.backendUrl;
+      $("#sysComfy").textContent = (info && info.comfy && info.comfy.reachable) ? ("connected · " + (info.comfy.url || "")) : "not detected";
+      $("#sysGpu").textContent = (info && info.gpu) ? info.gpu : "reported by backend";
+      $("#sysFfmpeg").textContent = (info && info.ffmpeg) ? info.ffmpeg : "reported by backend";
+      $("#sysModels").textContent = (info && info.models_installed != null) ? info.models_installed : "—";
+    } else {
+      $("#sysEndpoint").textContent = state.settings.backendUrl;
+      $("#sysComfy").textContent = "unavailable";
+      $("#sysGpu").textContent = detectBrowserGPU();
+      $("#sysFfmpeg").textContent = "unavailable (backend offline)";
+      $("#sysModels").textContent = "—";
+    }
+  }
+
+  function detectBrowserGPU() {
+    try {
+      const c = document.createElement("canvas");
+      const gl = c.getContext("webgl") || c.getContext("experimental-webgl");
+      if (!gl) return "no WebGL context";
+      const dbg = gl.getExtension("WEBGL_debug_renderer_info");
+      const name = dbg ? gl.getParameter(dbg.UNMASKED_RENDERER_WEBGL) : gl.getParameter(gl.RENDERER);
+      return String(name).slice(0, 52) + " (browser)";
+    } catch (e) { return "undetected"; }
+  }
+
+  /* ---------------------------------------------------------------
+     5. Router
+     --------------------------------------------------------------- */
+  const viewTitles = {
+    dashboard: "Dashboard", video: "AI Video Studio", image: "AI Image Studio", characters: "Character Library",
+    storyboard: "Storyboard", timeline: "Timeline Editor", audio: "Audio Studio", assets: "Asset Library",
+    models: "Model Manager", export: "Export Center", settings: "Settings"
+  };
+  function go(view) {
+    $$$$(".view").forEach((v) => v.classList.remove("active"));
+    const el = $("#view-" + view);
+    if (el) el.classList.add("active");
+    $$(".nav-item").forEach((n) => n.classList.toggle("active", n.dataset.view === view));
+    ("#crumbView").textContent = viewTitles[view] || view;
+    $("#rail").classList.remove("open");
+    if (view === "assets") renderAssets();
+    if (view === "models") renderModels();
+    if (view === "dashboard") renderDashboard();
+    if (view === "timeline") renderTimeline();
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+  $$$$(".nav-item").forEach((n) => n.onclick = () => go(n.dataset.view));
+  $$("[data-goto]").forEach((b) => b.onclick = () => go(b.dataset.goto));
+  ("#menuBtn").onclick = () => $("#rail").classList.toggle("open");
+
+  /* ---------------------------------------------------------------
+     6. Segmented controls (generic)
+     --------------------------------------------------------------- */
+  function segment(container, onPick) {
+    const el = typeof container === "string" ? $(container) : container;
+    if (!el) return;
+    el.addEventListener("click", (e) => {
+      const b = e.target.closest("button");
+      if (!b) return;
+      $$$$("button", el).forEach((x) => x.classList.remove("on"));
+      b.classList.add("on");
+      onPick(b.dataset, b);
+    });
+  }
+
+  /* ---------------------------------------------------------------
+     7. Dashboard
+     --------------------------------------------------------------- */
+  function renderDashboard() {
+    const p = activeProject();
+    $("#statProjects").textContent = state.projects.length;
+    $("#statChars").textContent = state.characters.length;
+    $("#statScenes").textContent = p ? p.scenes.length : 0;
+    const active = state.jobs.filter((j) => j.status === "running" || j.status === "queued").length;
+    $("#statJobs").textContent = state.jobs.length;
+    $("#statJobsSub").textContent = active ? active + " active" : "Queue idle";
+    $("#navCharCount").textContent = state.characters.length;
+    $("#projName").textContent = p ? p.name : "—";
+
+    const grid = $("#projectGrid");
+    grid.innerHTML = "";
+    if (!state.projects.length) {
+      grid.innerHTML = '<div class="empty">No projects yet</div>';
+    }
+    state.projects.forEach((pr) => {
+      const card = document.createElement("div");
+      card.className = "panel";
+      card.style.cursor = "pointer";
+      card.innerHTML =
+        '<div class="panel-body">' +
+        '<div class="label">' + new Date(pr.createdAt).toLocaleDateString() + "</div>" +
+        '<div style="font-family:var(--display);font-size:17px;font-weight:600">' + esc(pr.name) + "</div>" +
+        '<div class="hint">' + pr.scenes.length + " scenes · " + (pr.meta && pr.meta.aspect ? pr.meta.aspect : "16:9") + "</div>" +
+        "</div>" +
+        '<div class="panel-foot"><button class="btn btn-sm btn-ghost" data-open>Open</button>' +
+        '<button class="btn btn-sm btn-ghost" data-rename>Rename</button>' +
+        '<button class="btn btn-sm btn-danger" data-del>Delete</button></div>';
+      card.querySelector("[data-open]").onclick = (e) => { e.stopPropagation(); state.activeProjectId = pr.id; saveState(); renderAll(); toast("Opened project " + esc(pr.name)); };
+      card.querySelector("[data-rename]").onclick = (e) => { e.stopPropagation(); renameProject(pr); };
+      card.querySelector("[data-del]").onclick = (e) => {
+        e.stopPropagation();
+        if (state.projects.length === 1) return toast("At least one project must remain.", "warn");
+        state.projects = state.projects.filter((x) => x.id !== pr.id);
+        if (state.activeProjectId === pr.id) state.activeProjectId = state.projects[0].id;
+        saveState(); renderAll(); toast("Project deleted");
+      };
+      grid.appendChild(card);
+    });
+
+    renderJobList($("#dashJobs"));
+  }
+
+  function renameProject(pr) {
+    modal("Rename project",
+      '<div class="field"><div class="label">Project name</div><input class="input" id="mRename" value="' + esc(pr.name) + '"></div>',
+      [{ label: "Cancel" }, {
+        label: "Save", primary: true, onClick: () => {
+          const v = $("#mRename").value.trim();
+          if (v) { pr.name = v; pr.updatedAt = Date.now(); saveState(); renderAll(); }
+        }
+      }]);
+    setTimeout(() => { const i = $("#mRename"); if (i) { i.focus(); i.select(); } }, 60);
+  }
+
+  function createProjectFlow() {
+    modal("New project",
+      '<div class="field"><div class="label">Project name</div><input class="input" id="mProjName" value="Untitled Film"></div>' +
+      '<div class="field"><div class="label">Visual style block</div><input class="input" id="mProjStyle" value="cinematic, anamorphic, 35mm film grain"></div>' +
+      '<div class="row"><div class="field"><div class="label">Aspect ratio</div><select class="select" id="mProjAspect"><option>16:9</option><option>9:16</option><option>1:1</option><option>4:3</option><option>21:9</option></select></div>' +
+      '<div class="field"><div class="label">Frame rate</div><select class="select" id="mProjFps"><option>24</option><option selected>25</option><option>30</option></select></div></div>',
+      [{ label: "Cancel" }, {
+        label: "Create project", primary: true, onClick: () => {
+          const p = newProject($("#mProjName").value.trim() || "Untitled Film");
+          p.style = $("#mProjStyle").value.trim();
+          p.meta.aspect = $("#mProjAspect").value;
+          p.meta.fps = parseInt($("#mProjFps").value, 10);
+          state.projects.push(p);
+          state.activeProjectId = p.id;
+          saveState(); renderAll(); toast("Project created — " + esc(p.name));
+        }
+      }]);
+  }
+  $("#btnNewProject").onclick = createProjectFlow;
+  $("#btnNewProject2").onclick = createProjectFlow;
+  $("#btnNewProjectTop").onclick = createProjectFlow;
+  $("#projSelect").onclick = () => go("dashboard");
+  $("#btnClearJobs").onclick = () => { state.jobs = state.jobs.filter((j) => j.status === "running" || j.status === "queued"); saveState(); renderAll(); };
+  $("#btnQuickConnect").onclick = async () => { await Api.checkHealth(); await Api.models(); };
+  $("#btnTestBackend").onclick = diagnostics;
+  $("#btnTestBackend2").onclick = diagnostics;
+
+  async function diagnostics() {
+    toast("Running local diagnostics…", "warn");
+    const h = await Api.checkHealth();
+    if (!h) {
+      modal("Diagnostics — backend unreachable",
+        '<div class="note">Flow Studio could not reach <code>' + esc(state.settings.backendUrl) + '</code>.</div>' +
+        "<p style='margin-top:12px'>Generation is unavailable until the local backend is running. Nothing is simulated in the meantime.</p>" +
+        "<pre>cd flow-studio\npython -m venv .venv\n.venv\\Scripts\\activate\npip install -r requirements.txt\nuvicorn server:app --host 127.0.0.1 --port 8000</pre>",
+        [{ label: "Close" }, { label: "Copy command", primary: true, onClick: () => copyText("uvicorn server:app --host 127.0.0.1 --port 8000") }]);
+      return;
+    }
+    const rows = Object.keys(h).map((k) => {
+      const v = typeof h[k] === "object" ? JSON.stringify(h[k]) : String(h[k]);
+      return '<div class="kv"><span class="k">' + esc(k) + '</span><span class="v">' + esc(v.slice(0, 70)) + "</span></div>";
+    }).join("");
+    modal("Diagnostics — backend connected", rows, [{ label: "Close" }]);
+    await Api.models();
+  }
+
+  /* ---------------------------------------------------------------
+     8. Asset helpers
+     --------------------------------------------------------------- */
+  async function addAssetFromFile(file, kind) {
+    const rec = {
+      id: uid("asset"),
+      name: file.name,
+      kind: kind || (file.type.startsWith("video") ? "video" : file.type.startsWith("audio") ? "audio" : "image"),
+      type: file.type,
+      size: file.size,
+      blob: file,
+      createdAt: Date.now()
+    };
+    await IDB.put(rec);
+    renderAssets();
+    return rec;
+  }
+  async function assetURL(id) {
+    const rec = await IDB.get(id);
+    return rec ? URL.createObjectURL(rec.blob) : null;
+  }
+  async function fileToDataURL(file) {
+    return new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(r.result); r.onerror = rej; r.readAsDataURL(file); });
+  }
+  function esc(s) { return String(s == null ? "" : s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c])); }
+  function copyText(t) {
+    navigator.clipboard && navigator.clipboard.writeText(t).then(() => toast("Copied to clipboard")).catch(() => toast("Clipboard unavailable", "warn"));
+  }
+
+  /* ---------------------------------------------------------------
+     9. VIDEO STUDIO
+     --------------------------------------------------------------- */
+  const videoState = { mode: "t2v", aspect: "16:9", currentAsset: null };
+
+  segment("#videoModeSeg", (d) => {
+    videoState.mode = d.mode;
+    const labels = { t2v: "text-to-video", i2v: "image-to-video", firstlast: "first + last frame", reference: "reference-guided", character: "character shot", continue: "scene continuation", v2v: "video-to-video" };
+    $("#videoModeTag").textContent = labels[d.mode];
+    updatePayloadPreview();
+  });
+  segment("#vAspectSeg", (d) => {
+    videoState.aspect = d.ar;
+    $("#vCustomArWrap").style.display = d.ar === "custom" ? "block" : "none";
+    const map = { "16:9": [1280, 720], "9:16": [720, 1280], "1:1": [960, 960], "4:3": [1024, 768], "21:9": [1536, 640] };
+    if (map[d.ar]) { $("#vWidth").value = map[d.ar][0]; $("#vHeight").value = map[d.ar][1]; }
+    updatePayloadPreview();
+  });
+  $("#vMotion").addEventListener("input", (e) => { $("#vMotionVal").textContent = e.target.value; });
+  $("#btnVSeedRandom").onclick = () => { $("#vSeed").value = Math.floor(Math.random() * 2 ** 31); };
+  ["vPrompt", "vNegative", "vRes", "vFps", "vDuration", "vVariations", "vSeed", "vCamera", "vShot", "vQuality", "vModel", "vWidth", "vHeight"]
+    .forEach((id) => { const el = $("#" + id); if (el) el.addEventListener("input", updatePayloadPreview); });
+
+  async function collectVideoPayload() {
+    const mode = videoState.mode;
+    const aspect = videoState.aspect === "custom"
+      ? $("#vWidth").value + ":" + $("#vHeight").value
+      : videoState.aspect;
+    const [w, h] = resFromAspect(aspect, parseInt($("#vRes").value, 10));
+    const payload = {
+      kind: "video",
+      project_id: activeProject().id,
+      mode: mode,
+      model: $("#vModel").value,
+      prompt: $("#vPrompt").value.trim(),
+      negative_prompt: $("#vNegative").value.trim(),
+      aspect_ratio: aspect,
+      width: videoState.aspect === "custom" ? parseInt($("#vWidth").value, 10) : w,
+      height: videoState.aspect === "custom" ? parseInt($("#vHeight").value, 10) : h,
+      resolution_label: $("#vRes").value + "p",
+      fps: parseInt($("#vFps").value, 10),
+      duration_seconds: parseFloat($("#vDuration").value),
+      variations: clamp(parseInt($("#vVariations").value, 10) || 1, 1, 8),
+      seed: parseInt($("#vSeed").value, 10),
+      camera: $("#vCamera").value,
+      shot_type: $("#vShot").value,
+      motion_intensity: parseInt($("#vMotion").value, 10) / 100,
+      quality_preset: $("#vQuality").value,
+      characters: selectedCharacterIds(),
+      preserve_native: state.settings.keepNative,
+      watermark: false
+    };
+    for (const [key, inputId] of [["first_frame", "vFirstFrame"], ["last_frame", "vLastFrame"], ["reference_image", "vRef"], ["source_video", "vSourceVideo"]]) {
+      const f = $("#" + inputId).files && $("#" + inputId).files[0];
+      if (f) payload[key] = await fileToDataURL(f);
+    }
+    return payload;
+  }
+
+  function resFromAspect(ar, base) {
+    const [aw, ah] = ar.split(":").map(Number);
+    const ratio = (aw || 16) / (ah || 9);
+    let h = base, w = Math.round(base * ratio / 2) * 2;
+    if (ratio < 1) { w = base; h = Math.round(base / ratio / 2) * 2; }
+    return [w, h];
+  }
+
+  function selectedCharacterIds() {
+    return $$("#vCharChips .chip.on").map((c) => c.dataset.id);
+  }
+
+  async function updatePayloadPreview() {
+    try {
+      const p = await collectVideoPayload();
+      const view = Object.assign({}, p);
+      ["first_frame", "last_frame", "reference_image", "source_video"].forEach((k) => { if (view[k]) view[k] = "<" + k + " binary " + Math.round(view[k].length / 1024) + " KB>"; });
+      ("#vPayloadPreview").textContent = JSON.stringify(view, null, 2);
+    } catch (e) { /* preview is best-effort */ }
+  }
+
+  $("#btnVideoPayload").onclick = () => {
+    modal("Backend request payload",
+      "<p style='font-size:12.5px;color:var(--ink-2)'>This is exactly what Flow Studio sends to the local backend. Copy it to reproduce a render from the command line.</p><pre>" +
+      esc($("#vPayloadPreview").textContent) + "</pre>",
+      [{ label: "Close" }, { label: "Copy JSON", primary: true, onClick: () => copyText($("#vPayloadPreview").textContent) }]);
+  };
+  $("#btnCopyPayload").onclick = () => copyText($("#vPayloadPreview").textContent);
+
+  async function runVideoGeneration() {
+    const prompt = $("#vPrompt").value.trim();
+    if (!prompt && videoState.mode !== "i2v" && videoState.mode !== "v2v") {
+      return toast("Add a shot description before generating.", "warn");
+    }
+    const payload = await collectVideoPayload();
+    const job = { id: uid("job"), kind: "video", status: "queued", progress: 0, label: prompt.slice(0, 62) || "Video job", createdAt: Date.now(), payload: payload };
+    state.jobs.unshift(job);
+    saveState(); renderJobList($("#videoQueue")); renderJobList($("#dashJobs"));
+    $("#vQueueCount").textContent = state.jobs.length;
+    setProgress(2, "Submitting to local backend…");
+
+    if (!Api.health) await Api.checkHealth();
+    if (!Api.health) {
+      job.status = "error";
+      job.message = "Backend offline — request not sent. Nothing was generated.";
+      saveState();
+      setProgress(0, "Backend offline. Start the local service to generate — no simulated output is produced.");
+      toast("Backend offline. Generation requires the local service.", "err", true);
+      renderJobList($("#videoQueue"));
+      modal("Backend offline — no generation performed",
+        '<div class="note">Flow Studio did not generate anything, because no local backend is running. It will not show placeholder media pretending to be output.</div>' +
+        "<p style='margin-top:12px'>The exact request is preserved below; start the backend and press Generate again.</p><pre>" +
+        esc(JSON.stringify(payload, (k, v) => (typeof v === "string" && v.length > 400 ? v.slice(0, 120) + "…<binary>" : v), 2)) + "</pre>" +
+        "<pre style='margin-top:10px'># start backend\nuvicorn server:app --host 127.0.0.1 --port 8000</pre>",
+        [{ label: "Close" }, { label: "Copy payload", primary: true, onClick: () => copyText(JSON.stringify(payload)) }]);
+      return;
+    }
+
+    try {
+      job.status = "running";
+      const res = await Api.generate("video", payload);
+      job.backendId = res.job_id || res.id;
+      job.status = "running";
+      saveState();
+      pollJob(job);
+    } catch (e) {
+      job.status = "error";
+      job.message = String(e.message || e);
+      saveState();
+      setProgress(0, "Generation failed: " + job.message);
+      toast("Generation failed — " + esc(job.message), "err", true);
+      renderJobList($("#videoQueue"));
+    }
+  }
+  $("#btnGenVideo").onclick = runVideoGeneration;
+  $("#btnGenVideo2").onclick = runVideoGeneration;
+
+  function setProgress(pct, text) {
+    const bar = $("#vProgressBar i");
+    if (bar) bar.style.width = (pct || 0) + "%";
+    if (text) $("#vProgressText").textContent = text;
+  }
+
+  function pollJob(job) {
+    const tick = async () => {
+      try {
+        const s = await Api.job(job.backendId || job.id);
+        job.progress = Math.round((s.progress || 0) * 100);
+        job.status = s.status || job.status;
+        if (job.kind === "video") setProgress(job.progress, (s.message || "Rendering") + " · " + job.progress + "%");
+        renderJobList($("#videoQueue"));
+        renderJobList($("#dashJobs"));
+        if (job.status === "done" || job.status === "completed") {
+          job.outputs = s.outputs || [];
+          await showVideoResult(job);
+          saveState();
+          toast("Render complete — " + esc(job.label));
+          return;
+        }
+        if (job.status === "error") {
+          job.message = s.message || "unknown error";
+          setProgress(0, "Failed: " + job.message);
+          toast("Render failed — " + esc(job.message), "err", true);
+          saveState();
+          return;
+        }
+      } catch (e) { /* transient */ }
+      setTimeout(tick, 1200);
+    };
+    tick();
+  }
+
+  async function showVideoResult(job) {
+    const out = (job.outputs || [])[0];
+    if (!out) { setProgress(100, "Complete — backend returned no file reference."); return; }
+    const url = out.url ? (state.settings.backendUrl.replace(/\/$/, "") + out.url) : out.path;
+    const mon = $("#videoMonitor");
+    mon.innerHTML = '<div class="corner c1"></div><div class="corner c2"></div><div class="corner c3"></div><div class="corner c4"></div>' +
+      '<div class="osd">FLOW · OUTPUT</div><div class="osd-r">' + esc(out.width || "?") + " × " + esc(out.height || "?") + "</div>" +
+      '<video src="' + esc(url) + '" controls loop muted playsinline></video>';
+    $("#vMonitorRes").textContent = (out.width || "?") + " × " + (out.height || "?");
+    setProgress(100, "Complete. Native resolution preserved — " + (out.width || "?") + "×" + (out.height || "?") + " @ " + (out.fps || $("#vFps").value) + "fps");
+    videoState.currentAsset = out;
+    saveState();
+  }
+
+  $("#btnVSendToTimeline").onclick = async () => {
+    const out = videoState.currentAsset;
+    if (!out) return toast("Generate a shot first.", "warn");
+    state.timeline.video.push({
+      id: uid("clip"), name: "Shot " + (state.timeline.video.length + 1), assetId: out.id || null,
+      src: out.url ? (state.settings.backendUrl.replace(/\/$/, "") + out.url) : out.path,
+      duration: parseFloat($("#vDuration").value), in: 0, out: parseFloat($("#vDuration").value), speed: 1, transition: "cut"
+    });
+    saveState(); renderTimeline(); toast("Clip added to timeline V1");
+    go("timeline");
+  };
+  $("#btnVSaveAsset").onclick = () => toast("Output is stored in the local output folder referenced by the backend.", "ok");
+
+  /* ---------------------------------------------------------------
+     10. IMAGE STUDIO
+     --------------------------------------------------------------- */
+  const imageState = { mode: "txt2img", painting: false, erase: false, hasImage: false };
+  const canvas = $("#iCanvas"), ctx = canvas.getContext("2d");
+  const maskCanvas = document.createElement("canvas");
+  const maskCtx = maskCanvas.getContext("2d");
+  maskCanvas.width = canvas.width; maskCanvas.height = canvas.height;
+
+  function paintBase() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = "#0B0F13";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.strokeStyle = "#1A222A";
+    ctx.lineWidth = 1;
+    for (let x = 0; x < canvas.width; x += 32) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, canvas.height); ctx.stroke(); }
+    for (let y = 0; y < canvas.height; y += 32) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(canvas.width, y); ctx.stroke(); }
+    ctx.fillStyle = "#3A4652";
+    ctx.font = "500 15px 'JetBrains Mono', monospace";
+    ctx.textAlign = "center";
+    ctx.fillText(imageState.hasImage ? "DRAG TO MASK THE AREA TO REGENERATE" : "LOAD A SOURCE IMAGE OR GENERATE", canvas.width / 2, canvas.height / 2);
+  }
+  paintBase();
+
+  let lastPt = null;
+  function canvasPoint(e) {
+    const r = canvas.getBoundingClientRect();
+    return { x: (e.clientX - r.left) * (canvas.width / r.width), y: (e.clientY - r.top) * (canvas.height / r.height) };
+  }
+  function drawMaskAt(pt) {
+    const size = parseInt($("#iBrush").value, 10);
+    maskCtx.globalCompositeOperation = imageState.erase ? "destination-out" : "source-over";
+    maskCtx.fillStyle = "rgba(255,106,43,0.62)";
+    maskCtx.beginPath();
+    if (lastPt) { maskCtx.moveTo(lastPt.x, lastPt.y); maskCtx.lineTo(pt.x, pt.y); maskCtx.lineWidth = size; maskCtx.lineCap = "round"; maskCtx.stroke(); }
+    else { maskCtx.arc(pt.x, pt.y, size / 2, 0, Math.PI * 2); maskCtx.fill(); }
+    lastPt = pt;
+    compositeCanvas();
+  }
+  function compositeCanvas() {
+    paintBase();
+    if (imageState.baseImg) ctx.drawImage(imageState.baseImg, 0, 0, canvas.width, canvas.height);
+    ctx.drawImage(maskCanvas, 0, 0);
+  }
+  canvas.addEventListener("mousedown", (e) => { imageState.painting = true; lastPt = null; drawMaskAt(canvasPoint(e)); });
+  canvas.addEventListener("mousemove", (e) => { if (imageState.painting) drawMaskAt(canvasPoint(e)); });
+  window.addEventListener("mouseup", () => { imageState.painting = false; lastPt = null; });
+  canvas.addEventListener("touchstart", (e) => { e.preventDefault(); imageState.painting = true; lastPt = null; drawMaskAt(canvasPoint(e.touches[0])); }, { passive: false });
+  canvas.addEventListener("touchmove", (e) => { e.preventDefault(); if (imageState.painting) drawMaskAt(canvasPoint(e.touches[0])); }, { passive: false });
+  window.addEventListener("touchend", () => { imageState.painting = false; lastPt = null; });
+
+  $("#btnClearMask").onclick = () => { maskCtx.clearRect(0, 0, maskCanvas.width, maskCanvas.height); compositeCanvas(); };
+  $("#btnMaskMode").onclick = (e) => {
+    imageState.erase = !imageState.erase;
+    e.target.textContent = "Brush: " + (imageState.erase ? "erase" : "paint");
+  };
+  $("#iDenoise").addEventListener("input", (e) => { $("#iDenoiseVal").textContent = (e.target.value / 100).toFixed(2); });
+  $("#iSource").addEventListener("change", async (e) => {
+    const f = e.target.files[0];
+    if (!f) return;
+    const img = new Image();
+    img.onload = () => {
+      imageState.baseImg = img;
+      imageState.hasImage = true;
+      canvas.width = img.naturalWidth; canvas.height = img.naturalHeight;
+      maskCanvas.width = canvas.width; maskCanvas.height = canvas.height;
+      $("#iWidth").value = img.naturalWidth; $("#iHeight").value = img.naturalHeight;
+      compositeCanvas();
+      await_(() => addAssetFromFile(f, "image"));
+    };
+    img.src = URL.createObjectURL(f);
+  });
+  function await_(fn) { Promise.resolve().then(fn).catch(() => {}); }
+
+  $("#btnLocalResize").onclick = () => {
+    const w = clamp(parseInt($("#iWidth").value, 10) || canvas.width, 16, 8192);
+    const h = clamp(parseInt($("#iHeight").value, 10) || canvas.height, 16, 8192);
+    const tmp = document.createElement("canvas");
+    tmp.width = w; tmp.height = h;
+    tmp.getContext("2d").drawImage(canvas, 0, 0, w, h);
+    canvas.width = w; canvas.height = h;
+    maskCanvas.width = w; maskCanvas.height = h;
+    ctx.drawImage(tmp, 0, 0);
+    toast("Canvas resized to " + w + "×" + h + " (local operation, no AI)");
+  };
+
+  $("#btnExportPng").onclick = () => {
+    canvas.toBlob((b) => {
+      if (!b) return toast("Nothing to export.", "warn");
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(b);
+      a.download = "flow_image_" + Date.now() + ".png";
+      a.click();
+      toast("Exported PNG at native resolution — no watermark");
+    }, "image/png");
+  };
+
+  segment("#iModeSeg", (d) => {
+    imageState.mode = d.mode;
+    const labels = { txt2img: "text-to-image", img2img: "image-to-image", inpaint: "inpainting", outpaint: "outpainting" };
+    $("#iModeTag").textContent = labels[d.mode];
+  });
+
+  async function runImageGeneration() {
+    const prompt = $("#iPrompt").value.trim();
+    if (!prompt) return toast("Add a prompt before generating.", "warn");
+    if (!Api.health) await Api.checkHealth();
+
+    const payload = {
+      kind: "image",
+      project_id: activeProject().id,
+      mode: imageState.mode,
+      model: $("#iModel").value,
+      prompt: prompt,
+      negative_prompt: $("#iNegative").value.trim(),
+      width: parseInt($("#iWidth").value, 10) || canvas.width,
+      height: parseInt($("#iHeight").value, 10) || canvas.height,
+      steps: clamp(parseInt($("#iSteps").value, 10) || 28, 1, 150),
+      cfg_scale: parseFloat($("#iCfg").value) || 6.5,
+      seed: parseInt($("#iSeed").value, 10),
+      sampler: $("#iSampler").value,
+      variations: clamp(parseInt($("#iVariations").value, 10) || 1, 1, 8),
+      denoise: parseInt($("#iDenoise").value, 10) / 100,
+      characters: selectedCharacterIds(),
+      watermark: false
+    };
+    if (imageState.mode !== "txt2img" && imageState.baseImg) payload.source_image = canvas.toDataURL("image/png");
+    if (imageState.mode === "inpaint") payload.mask = maskCanvas.toDataURL("image/png");
+
+    $("#iJobTag").textContent = "submitting…";
+
+    if (!Api.health) {
+      $("#iJobTag").textContent = "backend offline";
+      toast("Backend offline — no image was generated.", "err", true);
+      modal("Backend offline — no generation performed",
+        '<div class="note">Flow Studio will not draw fake images and call them generated output. Start the local backend, then press Generate.</div>' +
+        "<pre style='margin-top:12px'>" + esc(JSON.stringify(payload, (k, v) => (typeof v === "string" && v.length > 300 ? v.slice(0, 90) + "…<binary>" : v), 2)) + "</pre>",
+        [{ label: "Close" }, { label: "Copy payload", primary: true, onClick: () => copyText(JSON.stringify(payload)) }]);
+      return;
+    }
+
+    try {
+      $("#iJobTag").textContent = "running";
+      const res = await Api.generate("image", payload);
+      const jid = res.job_id || res.id;
+      const poll = async () => {
+        const s = await Api.job(jid);
+        $("#iJobTag").textContent = s.status + " · " + Math.round((s.progress || 0) * 100) + "%";
+        if (s.status === "done" || s.status === "completed") {
+          const outs = s.outputs || [];
+          const wrap = $("#imageResults");
+          wrap.innerHTML = "";
+          for (const o of outs) {
+            const url = o.url ? (state.settings.backendUrl.replace(/\/$/, "") + o.url) : o.path;
+            const card = document.createElement("div");
+            card.className = "frame";
+            card.innerHTML = '<div class="corner c1"></div><div class="corner c2"></div><div class="corner c3"></div><div class="corner c4"></div>' +
+              '<img src="' + esc(url) + '"><div class="osd-r">' + esc(o.width || "") + "×" + esc(o.height || "") + "</div>";
+            wrap.appendChild(card);
+          }
+          $("#iJobTag").textContent = "complete";
+          toast("Image generation complete");
+          return;
+        }
+        if (s.status === "error") {
+          $("#iJobTag").textContent = "error";
+          toast("Generation failed — " + esc(s.message || "unknown"), "err", true);
+          return;
+        }
+        setTimeout(poll, 1000);
+      };
+      poll();
+    } catch (e) {
+      $("#iJobTag").textContent = "error";
+      toast("Generation failed — " + esc(String(e.message || e)), "err", true);
+    }
+  }
+  $("#btnGenImage").onclick = runImageGeneration;
+
+  /* ---------------------------------------------------------------
+     11. CHARACTERS
+     --------------------------------------------------------------- */
+  let selectedCharId = null;
+
+  $("#btnNewChar").onclick = () => {
+    modal("Create character",
+      '<div class="row"><div class="field"><div class="label">Name <span class="req">*</span></div><input class="input" id="mCharName" placeholder="Captain Imani Vale"></div>' +
+      '<div class="field"><div class="label">Age appearance</div><input class="input" id="mCharAge" placeholder="mid-40s"></div></div>' +
+      '<div class="row"><div class="field"><div class="label">Build / body structure</div><input class="input" id="mCharBuild" placeholder="tall, athletic, broad shoulders"></div>' +
+      '<div class="field"><div class="label">Hair</div><input class="input" id="mCharHair" placeholder="close-cropped silver, scar at left brow"></div></div>' +
+      '<div class="field"><div class="label">Wardrobe</div><input class="input" id="mCharClothes" placeholder="dark teal drysuit, worn leather harness"></div>' +
+      '<div class="field"><div class="label">Accessories</div><input class="input" id="mCharAccess" placeholder="brass dive watch, cracked rebreather mask"></div>' +
+      '<div class="field"><div class="label">Facial / identity notes</div><textarea class="textarea" id="mCharNotes" placeholder="strong jaw, deep-set eyes, weathered skin, calm expression"></textarea></div>' +
+      '<div class="field"><div class="label">Reference photographs</div><input class="input" type="file" id="mCharRefs" accept="image/*" multiple><div class="hint">3–8 images with varied angles and consistent wardrobe produce the strongest identity anchoring.</div></div>',
+      [{ label: "Cancel" }, { label: "Create character", primary: true, onClick: createCharacterFromModal }]);
+    setTimeout(() => { const i = $("#mCharName"); if (i) i.focus(); }, 60);
+  };
+
+  async function createCharacterFromModal() {
+    const name = $("#mCharName").value.trim();
+    if (!name) return toast("A character name is required.", "warn");
+    const char = {
+      id: uid("char"),
+      code: "CHR-" + Math.random().toString(36).slice(2, 7).toUpperCase(),
+      name: name,
+      age: $("#mCharAge").value.trim(),
+      build: $("#mCharBuild").value.trim(),
+      hair: $("#mCharHair").value.trim(),
+      clothes: $("#mCharClothes").value.trim(),
+      accessories: $("#mCharAccess").value.trim(),
+      notes: $("#mCharNotes").value.trim(),
+      refs: [],
+      createdAt: Date.now()
+    };
+    const files = $("#mCharRefs").files;
+    for (let i = 0; i < files.length; i++) {
+      const rec = await addAssetFromFile(files[i], "image");
+      char.refs.push(rec.id);
+    }
+    state.characters.push(char);
+    selectedCharId = char.id;
+    saveState(); renderCharacters();
+    toast("Character created · permanent ID " + char.code);
+  }
+
+  function renderCharacters() {
+    const grid = $("#charGrid");
+    grid.innerHTML = "";
+    const q = ($("#charSearch").value || "").toLowerCase();
+    const list = state.characters.filter((c) => !q || c.name.toLowerCase().includes(q));
+    if (!list.length) {
+      grid.innerHTML = '<div class="empty">No characters yet<br>create one to keep identity consistent</div>';
+    }
+    list.forEach((c) => {
+      const card = document.createElement("div");
+      card.className = "panel";
+      card.style.cursor = "pointer";
+      card.innerHTML =
+        '<div class="panel-body" style="padding:12px">' +
+        '<div style="display:flex;gap:11px;align-items:center">' +
+        '<div class="thumb-sm" style="width:52px;height:52px;border-radius:8px" id="thm_' + c.id + '"></div>' +
+        '<div style="min-width:0"><div style="font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + esc(c.name) + "</div>" +
+        '<div class="sub" style="font-family:var(--mono);font-size:9px;letter-spacing:.12em;color:var(--ink-3)">' + esc(c.code) + "</div></div></div>" +
+        '<div class="hint" style="margin-top:9px">' + esc(c.age || "—") + " · " + esc(c.build || "—") + "</div>" +
+        "</div>" +
+        '<div class="panel-foot"><button class="btn btn-sm btn-ghost" data-edit>Edit</button><button class="btn btn-sm btn-danger" data-del>Remove</button></div>';
+      card.onclick = () => { selectedCharId = c.id; renderCharacterDetail(); };
+      card.querySelector("[data-edit]").onclick = (e) => { e.stopPropagation(); selectedCharId = c.id; renderCharacterDetail(); go("characters"); };
+      card.querySelector("[data-del]").onclick = async (e) => {
+        e.stopPropagation();
+        state.characters = state.characters.filter((x) => x.id !== c.id);
+        if (selectedCharId === c.id) selectedCharId = null;
+        saveState(); renderCharacters(); renderCharacterDetail(); renderCharChips();
+      };
+      grid.appendChild(card);
+      if (c.refs && c.refs.length) {
+        assetURL(c.refs[0]).then((u) => {
+          const t = $("#thm_" + c.id);
+          if (t && u) { t.style.background = "url(" + u + ") center/cover"; }
+        });
+      }
+    });
+    renderCharChips();
+    renderCharacterDetail();
+    $("#navCharCount").textContent = state.characters.length;
+    const t = $("#ttsCharacter");
+    if (t) {
+      t.innerHTML = '<option value="">Unassigned</option>' + state.characters.map((c) => '<option value="' + c.id + '">' + esc(c.name) + "</option>").join("");
+    }
+    const s = $("#ttsScene");
+    if (s) {
+      const p = activeProject();
+      s.innerHTML = '<option value="">Unassigned</option>' + p.scenes.map((sc, i) => '<option value="' + sc.id + '">Scene ' + (i + 1) + " · " + esc(sc.title) + "</option>").join("");
+    }
+  }
+
+  function renderCharChips() {
+    const wrap = $("#vCharChips");
+    if (!wrap) return;
+    wrap.innerHTML = "";
+    if (!state.characters.length) {
+      wrap.innerHTML = '<div class="hint">No characters yet — create one in the Character Library.</div>';
+      return;
+    }
+    state.characters.forEach((c) => {
+      const chip = document.createElement("span");
+      chip.className = "chip";
+      chip.dataset.id = c.id;
+      chip.textContent = c.name + " · " + c.code;
+      chip.onclick = () => { chip.classList.toggle("on"); updatePayloadPreview(); };
+      wrap.appendChild(chip);
+    });
+  }
+
+  function renderCharacterDetail() {
+    const wrap = $("#charDetail");
+    const c = state.characters.find((x) => x.id === selectedCharId);
+    if (!c) {
+      wrap.innerHTML = '<div class="empty">Select a character to edit<br>identity, references and prompt block</div>';
+      $("#charIdTag").textContent = "no selection";
+      return;
+    }
+    $("#charIdTag").textContent = c.code;
+    const promptBlock = buildCharPrompt(c);
+    wrap.innerHTML =
+      '<div class="row"><div class="field"><div class="label">Name</div><input class="input" data-f="name" value="' + esc(c.name) + '"></div>' +
+      '<div class="field"><div class="label">Age appearance</div><input class="input" data-f="age" value="' + esc(c.age) + '"></div></div>' +
+      '<div class="row"><div class="field"><div class="label">Build</div><input class="input" data-f="build" value="' + esc(c.build) + '"></div>' +
+      '<div class="field"><div class="label">Hair</div><input class="input" data-f="hair" value="' + esc(c.hair) + '"></div></div>' +
+      '<div class="field"><div class="label">Wardrobe</div><input class="input" data-f="clothes" value="' + esc(c.clothes) + '"></div>' +
+      '<div class="field"><div class="label">Accessories</div><input class="input" data-f="accessories" value="' + esc(c.accessories) + '"></div>' +
+      '<div class="field"><div class="label">Identity notes</div><textarea class="textarea" data-f="notes">' + esc(c.notes) + "</textarea></div>" +
+      '<div class="field"><div class="label">Reference photographs (' + (c.refs ? c.refs.length : 0) + ')</div><input class="input" type="file" id="charAddRefs" accept="image/*" multiple></div>' +
+      '<div class="field"><div class="label">Prompt block (appended to scenes)</div><textarea class="textarea mono" readonly style="min-height:82px">' + esc(promptBlock) + "</textarea>" +
+      '<div class="hint">Permanent ID: <code>' + esc(c.code) + '</code> — this identifier stays with the character for the life of the project.</div></div>' +
+      '<div class="row"><button class="btn btn-sm" id="charSave">Save character</button>' +
+      '<button class="btn btn-sm btn-ghost" id="charCopyPrompt">Copy prompt block</button></div>';
+
+    $("#charSave").onclick = async () => {
+      $$$$("[data-f]", wrap).forEach((el) => { c[el.dataset.f] = el.value; });
+      const files = $("#charAddRefs").files;
+      for (let i = 0; i < files.length; i++) {
+        const rec = await addAssetFromFile(files[i], "image");
+        c.refs = c.refs || []; c.refs.push(rec.id);
+      }
+      saveState(); renderCharacters(); toast("Character saved");
+    };
+    $("#charCopyPrompt").onclick = () => copyText(buildCharPrompt(c));
+  }
+
+  function buildCharPrompt(c) {
+    const parts = [
+      c.name ? "same person as reference: " + c.name : "",
+      c.age ? c.age : "",
+      c.build ? c.build : "",
+      c.hair ? c.hair : "",
+      c.notes ? c.notes : "",
+      c.clothes ? "wearing " + c.clothes : "",
+      c.accessories ? c.accessories : ""
+    ].filter(Boolean);
+    return parts.join(", ");
+  }
+  $("#charSearch").addEventListener("input", renderCharacters);
+
+  /* ---------------------------------------------------------------
+     12. STORYBOARD
+     --------------------------------------------------------------- */
+  const cameraBank = ["wide establishing", "slow dolly in", "handheld follow", "static medium", "low-angle push", "over-the-shoulder", "close-up hold", "crane up reveal", "orbit right", "POV tracking"];
+
+  $("#btnAddScene").onclick = () => {
+    const p = activeProject();
+    p.scenes.push(blankScene(p.scenes.length + 1));
+    saveState(); renderScenes();
+  };
+  function blankScene(n) {
+    return {
+      id: uid("scene"), index: n, title: "Scene " + n,
+      prompt: "", negative: "", dialogue: "", voiceover: "",
+      camera: cameraBank[(n - 1) % cameraBank.length],
+      characters: [], duration: 5, aspect: activeProject().meta.aspect || "16:9",
+      firstFrame: null, lastFrame: null, clip: null, status: "draft"
+    };
+  }
+
+  $("#btnBreakdownLocal").onclick = () => {
+    const idea = $("#storyIdea").value.trim();
+    if (!idea) return toast("Write a story idea first.", "warn");
+    const count = clamp(parseInt($("#storySceneCount").value, 10) || 6, 1, 40);
+    const p = activeProject();
+    const style = $("#storyStyle").value.trim();
+    const sentences = idea.split(/(?<=[.!?])\s+/).filter(Boolean);
+    const beats = [];
+    for (let i = 0; i < count; i++) beats.push(sentences[i % Math.max(1, sentences.length)]);
+    p.style = style;
+    p.scenes = beats.map((b, i) => {
+      const s = blankScene(i + 1);
+      s.title = "Beat " + String(i + 1).padStart(2, "0");
+      s.prompt = b + ". " + cameraBank[i % cameraBank.length] + " shot, " + (style || "cinematic");
+      s.camera = cameraBank[i % cameraBank.length];
+      s.duration = 4 + (i % 3);
+      return s;
+    });
+    $("#breakdownTag").textContent = "deterministic local split · not an LLM call";
+    saveState(); renderScenes();
+    toast("Broke idea into " + p.scenes.length + " beats (local deterministic tool)");
+  };
+
+  $("#btnBreakdownAI").onclick = async () => {
+    const idea = $("#storyIdea").value.trim();
+    if (!idea) return toast("Write a story idea first.", "warn");
+    if (!Api.health) await Api.checkHealth();
+    if (!Api.health) {
+      toast("Backend offline — AI breakdown unavailable. Local breakdown still works.", "warn");
+      return;
+    }
+    try {
+      const res = await Api.request("/api/story/breakdown", {
+        method: "POST",
+        body: { idea: idea, style: $("#storyStyle").value.trim(), scenes: parseInt($("#storySceneCount").value, 10) || 6 }
+      });
+      const p = activeProject();
+      p.scenes = (res.scenes || []).map((s, i) => Object.assign(blankScene(i + 1), {
+        title: s.title || "Scene " + (i + 1), prompt: s.prompt || "", dialogue: s.dialogue || "",
+        camera: s.camera || cameraBank[i % cameraBank.length], duration: s.duration || 5
+      }));
+      $("#breakdownTag").textContent = "generated by local LLM";
+      saveState(); renderScenes();
+      toast("Story broken down by local model");
+    } catch (e) {
+      toast("AI breakdown failed — " + esc(String(e.message || e)), "err");
+    }
+  };
+
+  let currentSceneId = null;
+  function renderScenes() {
+    const p = activeProject();
+    const strip = $("#sceneStrip");
+    strip.innerHTML = "";
+    if (!p.scenes.length) {
+      strip.innerHTML = '<div class="empty" style="width:100%">No scenes yet — write an idea and break it down</div>';
+      renderSceneEditor();
+      return;
+    }
+    p.scenes.forEach((s, i) => {
+      const card = document.createElement("div");
+      card.className = "strip-card" + (s.id === currentSceneId ? " sel" : "");
+      card.innerHTML =
+        '<div class="thumb" id="sthumb_' + s.id + '"><div class="num">SC ' + String(i + 1).padStart(2, "0") + "</div>" +
+        (s.clip ? '<video src="' + esc(s.clip) + '" muted></video>' : '<div class="placeholder" style="font-size:9px;padding:20px 8px">no clip</div>') + "</div>" +
+        '<div class="meta"><div class="t">' + esc(s.title) + '</div><div class="s">' + esc(s.camera) + " · " + s.duration + "s</div></div>";
+      card.onclick = () => { currentSceneId = s.id; renderScenes(); renderSceneEditor(); };
+      strip.appendChild(card);
+    });
+    renderSceneEditor();
+  }
+
+  function renderSceneEditor() {
+    const p = activeProject();
+    const s = p.scenes.find((x) => x.id === currentSceneId);
+    const wrap = $("#sceneEditor");
+    if (!s) {
+      wrap.innerHTML = '<div class="empty">Pick a scene from the strip above</div>';
+      $("#sceneEditTag").textContent = "no scene";
+      return;
+    }
+    $("#sceneEditTag").textContent = s.title;
+    wrap.innerHTML =
+      '<div class="row"><div class="field"><div class="label">Title</div><input class="input" data-s="title" value="' + esc(s.title) + '"></div>' +
+      '<div class="field"><div class="label">Duration (s)</div><input class="input mono" type="number" step="0.5" data-s="duration" value="' + s.duration + '"></div>' +
+      '<div class="field"><div class="label">Camera direction</div><input class="input" data-s="camera" value="' + esc(s.camera) + '"></div></div>' +
+      '<div class="field"><div class="label">Shot prompt</div><textarea class="textarea" data-s="prompt">' + esc(s.prompt) + "</textarea></div>" +
+      '<div class="field"><div class="label">Negative prompt</div><textarea class="textarea mono" data-s="negative" style="min-height:52px">' + esc(s.negative) + "</textarea></div>" +
+      '<div class="row"><div class="field"><div class="label">Dialogue</div><textarea class="textarea" data-s="dialogue" style="min-height:60px">' + esc(s.dialogue) + "</textarea></div>" +
+      '<div class="field"><div class="label">Voiceover</div><textarea class="textarea" data-s="voiceover" style="min-height:60px">' + esc(s.voiceover) + "</textarea></div></div>" +
+      '<div class="field"><div class="label">Characters in scene</div><div style="display:flex;gap:8px;flex-wrap:wrap" id="sceneCharChips"></div></div>' +
+      '<div class="row"><button class="btn btn-sm btn-primary" id="btnGenScene">▶ Generate this clip</button>' +
+      '<button class="btn btn-sm" id="btnSceneSave">Save scene</button>' +
+      '<button class="btn btn-sm btn-ghost" id="btnSceneDup">Duplicate</button>' +
+      '<button class="btn btn-sm btn-ghost" id="btnSceneUp">Move left</button>' +
+      '<button class="btn btn-sm btn-ghost" id="btnSceneDown">Move right</button>' +
+      '<button class="btn btn-sm btn-danger" id="btnSceneDel">Delete</button></div>';
+
+    const chips = $("#sceneCharChips");
+    state.characters.forEach((c) => {
+      const chip = document.createElement("span");
+      chip.className = "chip" + (s.characters.includes(c.id) ? " on" : "");
+      chip.textContent = c.name;
+      chip.onclick = () => {
+        if (s.characters.includes(c.id)) s.characters = s.characters.filter((x) => x !== c.id);
+        else s.characters.push(c.id);
+        chip.classList.toggle("on");
+        saveState();
+      };
+      chips.appendChild(chip);
+    });
+
+    $("#btnSceneSave").onclick = () => {
+      $$("[data-s]", wrap).forEach((el) => {
+        s[el.dataset.s] = el.dataset.s === "duration" ? parseFloat(el.value) || 5 : el.value;
+      });
+      saveState(); renderScenes(); toast("Scene saved");
+    };
+    ("#btnGenScene").onclick = () => generateSceneClip(s);
+    $("#btnSceneDup").onclick = () => {
+      const copy = JSON.parse(JSON.stringify(s));
+      copy.id = uid("scene"); copy.clip = null; copy.title = s.title + " (copy)";
+      p.scenes.splice(p.scenes.indexOf(s) + 1, 0, copy);
+      saveState(); renderScenes();
+    };
+    $("#btnSceneUp").onclick = () => moveScene(s, -1);
+    $("#btnSceneDown").onclick = () => moveScene(s, 1);
+    $("#btnSceneDel").onclick = () => {
+      p.scenes = p.scenes.filter((x) => x.id !== s.id);
+      currentSceneId = null;
+      saveState(); renderScenes();
+    };
+  }
+
+  function moveScene(s, dir) {
+    const arr = activeProject().scenes;
+    const i = arr.indexOf(s), j = i + dir;
+    if (j < 0 || j >= arr.length) return;
+    arr.splice(i, 1); arr.splice(j, 0, s);
+    saveState(); renderScenes();
+  }
+
+  async function generateSceneClip(s) {
+    const p = activeProject();
+    const idx = p.scenes.indexOf(s);
+    const style = $("#carryStyle").checked && p.style ? ", " + p.style : "";
+    const chars = $("#carryCharacters").checked
+      ? s.characters.map((id) => { const c = state.characters.find((x) => x.id === id); return c ? buildCharPrompt(c) : ""; }).filter(Boolean).join(", ")
+      : "";
+    let prompt = [s.prompt, chars, s.camera + " shot", style].filter(Boolean).join(", ");
+
+    $("#vPrompt").value = prompt;
+    $("#vNegative").value = s.negative;
+    $("#vDuration").value = s.duration;
+
+    if ($("#continueChain").checked && idx > 0) {
+      const prev = p.scenes[idx - 1];
+      if (prev && prev.lastFrame) {
+        toast("Continuity: previous scene's last frame will be used as first frame", "warn");
+      }
+    }
+
+    go("video");
+    toast("Scene " + (idx + 1) + " loaded into Video Studio — press Generate to render it");
+    await updatePayloadPreview();
+  }
+
+  $("#btnGenAllScenes").onclick = async () => {
+    const p = activeProject();
+    if (!p.scenes.length) return toast("No scenes to generate.", "warn");
+    if (!Api.health) await Api.checkHealth();
+    if (!Api.health) return toast("Backend offline — batch generation requires the local service.", "err", true);
+    toast("Queueing " + p.scenes.length + " scene renders…", "warn");
+    for (const s of p.scenes) {
+      await generateSceneClip(s);
+      await runVideoGeneration();
+    }
+  };
+
+  $("#btnAddAllToTimeline").onclick = () => {
+    const p = activeProject();
+    p.scenes.forEach((s) => {
+      state.timeline.video.push({
+        id: uid("clip"), name: s.title, src: s.clip, assetId: null,
+        duration: s.duration, in: 0, out: s.duration, speed: 1, transition: "cut"
+      });
+      if (s.dialogue) {
+        state.timeline.text.push({ id: uid("clip"), name: s.title + " · dialogue", text: s.dialogue, duration: s.duration, in: 0, out: s.duration });
+      }
+    });
+    saveState(); renderTimeline(); go("timeline");
+    toast("Scenes added to timeline");
+  };
+
+  /* ---------------------------------------------------------------
+     13. Timeline + preview sequencing + browser-side WebM export
+     --------------------------------------------------------------- */
+  const lanes = { video: "#laneVideo", overlay: "#laneOverlay", audio: "#laneAudio", music: "#laneMusic", text: "#laneText" };
+
+  function renderTimeline() {
+    Object.keys(lanes).forEach((k) => {
+      const el = $(lanes[k]);
+      if (!el) return;
+      el.innerHTML = "";
+      const items = state.timeline[k] || [];
+      if (!items.length) {
+        el.innerHTML = '<div class="hint" style="padding:12px">empty</div>';
+        return;
+      }
+      items.forEach((clip, i) => {
+        const d = document.createElement("div");
+        d.className = "tl-clip " + (k === "audio" || k === "music" ? "audio" : k === "text" ? "text" : "");
+        d.draggable = true;
+        d.dataset.idx = i;
+        d.innerHTML = '<div class="n">' + esc(clip.name || "clip") + '</div><div class="d">' + (clip.duration || 0).toFixed(1) + "s · " + esc(clip.transition || "cut") + "</div>";
+        d.onclick = () => selectClip(k, i);
+        d.addEventListener("dragstart", (e) => { d.classList.add("drag"); e.dataTransfer.setData("text/plain", k + ":" + i); });
+        d.addEventListener("dragend", () => d.classList.remove("drag"));
+        d.addEventListener("dragover", (e) => e.preventDefault());
+        d.addEventListener("drop", (e) => {
+          e.preventDefault();
+          const [fromKey, fromIdx] = e.dataTransfer.getData("text/plain").split(":");
+          const arr = state.timeline[fromKey];
+          const item = arr.splice(parseInt(fromIdx, 10), 1)[0];
+          state.timeline[k].splice(i, 0, item);
+          saveState(); renderTimeline();
+        });
+        el.appendChild(d);
+        if (i < items.length - 1) {
+          const t = document.createElement("div");
+          t.className = "tl-trans";
+          t.textContent = clip.transition === "cut" ? "|" : "»";
+          el.appendChild(t);
+        }
+      });
+    });
+
+    // ruler
+    const ruler = $("#tlRuler");
+    if (ruler) {
+      ruler.innerHTML = "";
+      for (let i = 0; i < 14; i++) {
+        const s = document.createElement("span");
+        s.textContent = fmtTime(i * 5);
+        ruler.appendChild(s);
+      }
+    }
+    $("#ffmpegCmd").textContent = buildFFmpegPlan();
+  }
+
+  let selectedClipRef = null;
+  function selectClip(track, idx) {
+    selectedClipRef = { track: track, idx: idx };
+    const clip = state.timeline[track][idx];
+    $("#clipTag").textContent = track.toUpperCase() + " · " + (idx + 1);
+    $("#clipInspector").innerHTML =
+      '<div class="field"><div class="label">Name</div><input class="input" data-c="name" value="' + esc(clip.name || "") + '"></div>' +
+      '<div class="row"><div class="field"><div class="label">In (s)</div><input class="input mono" type="number" step="0.1" data-c="in" value="' + (clip.in || 0) + '"></div>' +
+      '<div class="field"><div class="label">Out (s)</div><input class="input mono" type="number" step="0.1" data-c="out" value="' + (clip.out != null ? clip.out : clip.duration) + '"></div>' +
+      '<div class="field"><div class="label">Speed</div><input class="input mono" type="number" step="0.05" data-c="speed" value="' + (clip.speed || 1) + '"></div></div>' +
+      '<div class="row"><div class="field"><div class="label">Transition out</div><select class="select" data-c="transition">' +
+      ["cut", "crossfade", "dip_to_black", "wipe"].map((t) => '<option' + (clip.transition === t ? " selected" : "") + ">" + t + "</option>").join("") + "</select></div>" +
+      '<div class="field"><div class="label">Volume</div><input type="range" data-c="volume" min="0" max="150" value="' + (clip.volume != null ? clip.volume : 100) + '"></div></div>' +
+      '<div class="row"><button class="btn btn-sm" id="clipSave">Apply</button>' +
+      '<button class="btn btn-sm btn-ghost" id="clipSplit">Split at midpoint</button>' +
+      '<button class="btn btn-sm btn-danger" id="clipDelete">Delete</button></div>';
+
+    $("#clipSave").onclick = () => {
+      $$$$("[data-c]", $("#clipInspector")).forEach((el) => {
+        const k = el.dataset.c;
+        clip[k] = (k === "in" || k === "out" || k === "speed" || k === "volume") ? parseFloat(el.value) : el.value;
+      });
+      clip.duration = Math.max(0.1, (clip.out != null ? clip.out : clip.duration) - (clip.in || 0));
+      saveState(); renderTimeline(); toast("Clip updated");
+    };
+    $("#clipSplit").onclick = () => {
+      const half = (clip.duration || 1) / 2;
+      const b = JSON.parse(JSON.stringify(clip));
+      clip.duration = half; clip.out = (clip.in || 0) + half;
+      b.duration = half; b.in = clip.out; b.out = (b.in || 0) + half; b.name = (clip.name || "clip") + " · B";
+      state.timeline[selectedClipRef.track].splice(selectedClipRef.idx + 1, 0, b);
+      saveState(); renderTimeline(); toast("Clip split");
+    };
+    $("#clipDelete").onclick = () => {
+      state.timeline[selectedClipRef.track].splice(selectedClipRef.idx, 1);
+      selectedClipRef = null;
+      saveState(); renderTimeline(); toast("Clip removed");
+    };
+    $("#ffmpegCmd").textContent = buildFFmpegPlan();
+  }
+
+  $("#btnAddClip").onclick = () => {
+    state.timeline.video.push({ id: uid("clip"), name: "Clip " + (state.timeline.video.length + 1), src: null, duration: 5, in: 0, out: 5, speed: 1, transition: "cut" });
+    saveState(); renderTimeline();
+  };
+  $("#btnAddSubtitleTrack").onclick = () => {
+    state.timeline.text.push({ id: uid("clip"), name: "Subtitle " + (state.timeline.text.length + 1), text: "New subtitle line", duration: 3, in: 0, out: 3 });
+    saveState(); renderTimeline();
+  };
+  $("#btnClearTimeline").onclick = () => {
+    state.timeline = { video: [], overlay: [], audio: [], music: [], text: [] };
+    saveState(); renderTimeline(); toast("Timeline cleared");
+  };
+
+  // Program monitor — real sequencing of local clip sources
+  let playing = false, playIdx = 0;
+  $("#btnEditPlay").onclick = () => playTimeline();
+  $("#btnEditStop").onclick = () => stopTimeline();
+  $("#btnPlaySequence").onclick = () => { go("timeline"); playTimeline(); };
+
+  async function playTimeline() {
+    const clips = state.timeline.video.filter((c) => c.src);
+    if (!clips.length) return toast("No video clips with media on track V1.", "warn");
+    const video = $("#editVideo");
+    $("#editPlaceholder").style.display = "none";
+    video.style.display = "block";
+    playing = true;
+    playIdx = 0;
+    const total = clips.reduce((a, c) => a + (c.duration || 0), 0);
+    let elapsed = 0;
+    const runNext = () => {
+      if (!playing || playIdx >= clips.length) { stopTimeline(); return; }
+      const clip = clips[playIdx];
+      video.src = clip.src;
+      video.playbackRate = clip.speed || 1;
+      video.onended = () => { elapsed += clip.duration || 0; playIdx++; runNext(); };
+      video.play().catch(() => toast("Playback blocked by the browser — click the monitor first.", "warn"));
+    };
+    runNext();
+    const upd = () => {
+      if (!playing) return;
+      const t = elapsed + (video.currentTime || 0);
+      $("#editTime").textContent = fmtTime(t) + " / " + fmtTime(total);
+      $("#editTc").textContent = fmtTc(t, activeProject().meta.fps || 25);
+      $("#editProgressBar").style.width = clamp((t / Math.max(1, total)) * 100, 0, 100) + "%";
+      requestAnimationFrame(upd);
+    };
+    upd();
+  }
+  function stopTimeline() {
+    playing = false;
+    const video = $("#editVideo");
+    video.pause();
+    $("#editProgressBar").style.width = "0%";
+  }
+
+  function buildFFmpegPlan() {
+    const clips = state.timeline.video;
+    if (!clips.length) return "// add clips to the timeline to build the render plan";
+    const fps = activeProject().meta.fps || 25;
+    const inputs = clips.map((c, i) => "  -i '" + (c.src || "clip_" + i + ".mp4") + "'").join(" \\\n");
+    const filter = clips.map((c, i) =>
+      "[" + i + ":v]trim=start=" + (c.in || 0) + ":end=" + (c.out != null ? c.out : c.duration) +
+      ",setpts=PTS-STARTPTS" + (c.speed && c.speed !== 1 ? ",setpts=PTS/" + c.speed : "") + "[v" + i + "]"
+    ).join(";\n") + ";\n" + clips.map((c, i) => "[v" + i + "]").join("") + "concat=n=" + clips.length + ":v=1:a=0[vout]";
+    return "# Flow Studio — FFmpeg render plan (generated from the timeline)\n" +
+      "ffmpeg -y \\\n" + inputs + " \\\n" +
+      "  -filter_complex \"\n" + filter + "\" \\\n" +
+      "  -map \"[vout]\" -r " + fps + " -c:v libx264 -crf 16 -preset slow -pix_fmt yuv420p \\\n" +
+      "  -c:a aac -b:a 320k -movflags +faststart output_master.mp4";
+  }
+
+  $("#btnCopyFfmpeg").onclick = () => copyText($("#ffmpegCmd").textContent);
+
+  /* Browser-side preview export: real MediaRecorder capture of the program monitor.
+     This is a genuine local render (WebM). Master-quality export is done by FFmpeg. */
+  $("#btnRenderPreview").onclick = async () => {
+    const clips = state.timeline.video.filter((c) => c.src);
+    if (!clips.length) return toast("Nothing to render — add clips with media to V1.", "warn");
+    const status = $("#renderStatus"), bar = $("#renderBar i");
+    status.textContent = "Rendering preview…";
+
+    const canvasEl = document.createElement("canvas");
+    canvasEl.width = 1280; canvasEl.height = 720;
+    const c2 = canvasEl.getContext("2d");
+    const stream = canvasEl.captureStream(30);
+    let mime = "video/webm;codecs=vp9,opus";
+    if (!window.MediaRecorder || !MediaRecorder.isTypeSupported(mime)) mime = "video/webm;codecs=vp8,opus";
+    if (!window.MediaRecorder) return toast("MediaRecorder is unavailable in this browser.", "err");
+
+    const rec = new MediaRecorder(stream, { mimeType: mime, videoBitsPerSecond: 9000000 });
+    const chunks = [];
+    rec.ondataavailable = (e) => { if (e.data.size) chunks.push(e.data); };
+    rec.onstop = () => {
+      const blob = new Blob(chunks, { type: "video/webm" });
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = (activeProject().name || "flow").replace(/\s+/g, "_") + "_preview.webm";
+      a.click();
+      status.textContent = "Preview exported (WebM). Master export uses FFmpeg for full quality.";
+      bar.style.width = "100%";
+      toast("Preview rendered locally — no watermark");
+    };
+
+    const total = clips.reduce((a, c) => a + (c.duration || 0), 0);
+    let elapsed = 0;
+    rec.start();
+    for (const clip of clips) {
+      const el = document.createElement("video");
+      el.src = clip.src; el.muted = true; el.playsInline = true;
+      await new Promise((res) => { el.onloadeddata = res; el.onerror = res; });
+      el.currentTime = clip.in || 0;
+      try { await el.play(); } catch (e) { /* autoplay guard */ }
+      const start = performance.now();
+      await new Promise((res) => {
+        const draw = () => {
+          const t = (performance.now() - start) / 1000;
+          try { c2.drawImage(el, 0, 0, canvasEl.width, canvasEl.height); } catch (e) {
+            c2.fillStyle = "#0B0F13"; c2.fillRect(0, 0, canvasEl.width, canvasEl.height);
+            c2.fillStyle = "#FF6A2B"; c2.font = "600 22px 'JetBrains Mono', monospace"; c2.textAlign = "center";
+            c2.fillText("SLATE · " + (clip.name || "clip"), canvasEl.width / 2, canvasEl.height / 2);
+          }
+          const sub = state.timeline.text.find((s) => s.name && clip.name && s.name.indexOf(clip.name.split(" · ")[0]) === 0);
+          if (sub && sub.text) {
+            c2.font = "500 26px Inter, sans-serif"; c2.textAlign = "center";
+            c2.fillStyle = "rgba(0,0,0,.55)";
+            const w = c2.measureText(sub.text).width + 36;
+            c2.fillRect(canvasEl.width / 2 - w / 2, canvasEl.height - 88, w, 42);
+            c2.fillStyle = "#ECE7DE";
+            c2.fillText(sub.text, canvasEl.width / 2, canvasEl.height - 60);
+          }
+          elapsed = elapsed + 0;
+          bar.style.width = clamp(((elapsed + t) / Math.max(1, total)) * 100, 0, 100) + "%";
+          if (t >= (clip.duration || 1)) res(); else requestAnimationFrame(draw);
+        };
+        requestAnimationFrame(draw);
+      });
+      elapsed += clip.duration || 0;
+      el.pause();
+    }
+    rec.stop();
+  };
+
+  $("#btnRenderFinal").onclick = () => {
+    go("export");
+    toast("Configure the master in Export Center — FFmpeg renders locally at full quality.");
+  };
+
+  /* ---------------------------------------------------------------
+     14. Audio studio
+     --------------------------------------------------------------- */
+  function loadVoices() {
+    const sel = $("#ttsVoice");
+    if (!sel || !window.speechSynthesis) return;
+    const voices = speechSynthesis.getVoices();
+    sel.innerHTML = voices.map((v, i) => '<option value="' + i + '">' + esc(v.name) + " · " + esc(v.lang) + "</option>").join("") ||
+      '<option value="">default system voice</option>';
+  }
+  if (window.speechSynthesis) {
+    loadVoices();
+    speechSynthesis.onvoiceschanged = loadVoices;
+    $("#ttsEngineTag").textContent = "browser engine · local";
+  }
+  $("#ttsRate").addEventListener("input", (e) => { $("#ttsRateVal").textContent = (e.target.value / 100).toFixed(2); });
+  $("#ttsPitch").addEventListener("input", (e) => { $("#ttsPitchVal").textContent = (e.target.value / 100).toFixed(2); });
+
+  $("#btnTTSPreview").onclick = () => {
+    const text = $("#ttsText").value.trim();
+    if (!text) return toast("Write a line first.", "warn");
+    if (!window.speechSynthesis) return toast("Speech synthesis is not available in this browser.", "err");
+    speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(text);
+    const voices = speechSynthesis.getVoices();
+    const idx = parseInt($("#ttsVoice").value, 10);
+    if (voices[idx]) u.voice = voices[idx];
+    u.rate = parseInt($("#ttsRate").value, 10) / 100;
+    u.pitch = parseInt($("#ttsPitch").value, 10) / 100;
+    speechSynthesis.speak(u);
+    $("#audioState").textContent = "speaking";
+    u.onend = () => { $("#audioState").textContent = "stopped"; };
+  };
+  $("#btnTTS").onclick = () => $("#btnTTSPreview").onclick();
+
+  $("#btnTTSBackend").onclick = async () => {
+    const text = $("#ttsText").value.trim();
+    if (!text) return toast("Write a line first.", "warn");
+    if (!Api.health) await Api.checkHealth();
+    if (!Api.health) return toast("Backend offline — WAV rendering needs the local TTS service.", "err", true);
+    try {
+      const res = await Api.generate("audio", {
+        kind: "tts", text: text, voice: $("#ttsVoice").value, rate: parseInt($("#ttsRate").value, 10) / 100,
+        character_id: $("#ttsCharacter").value, scene_id: $("#ttsScene").value
+      });
+      toast("TTS queued — job " + esc(res.job_id || res.id));
+    } catch (e) { toast("TTS failed — " + esc(String(e.message || e)), "err"); }
+  };
+
+  $("#btnRecord").onclick = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mr = new MediaRecorder(stream);
+      const chunks = [];
+      mr.ondataavailable = (e) => chunks.push(e.data);
+      mr.onstop = async () => {
+        const blob = new Blob(chunks, { type: "audio/webm" });
+        const file = new File([blob], "voiceover_" + Date.now() + ".webm", { type: "audio/webm" });
+        const rec = await addAssetFromFile(file, "audio");
+        renderAudioList();
+        toast("Voiceover recorded and stored locally");
+        stream.getTracks().forEach((t) => t.stop());
+      };
+      mr.start();
+      $("#audioState").textContent = "recording";
+      toast("Recording voiceover… press Stop in the transport to finish", "warn");
+      $("#btnAudioStop").onclick = () => { if (mr.state !== "inactive") mr.stop(); $("#audioState").textContent = "stopped"; };
+    } catch (e) {
+      toast("Microphone access denied or unavailable.", "err");
+    }
+  };
+
+  $("#btnImportAudio").onclick = () => {
+    const inp = document.createElement("input");
+    inp.type = "file"; inp.accept = "audio/*"; inp.multiple = true;
+    inp.onchange = async () => {
+      for (const f of inp.files) await addAssetFromFile(f, "audio");
+      renderAudioList();
+      toast("Audio imported to local library");
+    };
+    inp.click();
+  };
+
+  async function renderAudioList() {
+    const all = await IDB.all();
+    const audio = all.filter((a) => a.kind === "audio");
+    const wrap = $("#audioList");
+    if (!wrap) return;
+    wrap.innerHTML = audio.length ? "" : '<div class="empty">No audio assets</div>';
+    $("#audioCount").textContent = audio.length;
+    audio.forEach((a) => {
+      const el = document.createElement("div");
+      el.className = "list-item";
+      el.innerHTML = '<div class="grow"><div class="title">' + esc(a.name) + '</div><div class="sub">' + (a.size / 1024).toFixed(0) + " KB · " + esc(a.type || "audio") + "</div></div>" +
+        '<button class="btn btn-sm btn-ghost" data-p>▶</button><button class="btn btn-sm btn-danger" data-d>✕</button>';
+      el.querySelector("[data-p]").onclick = () => {
+        const u = URL.createObjectURL(a.blob);
+        const au = new Audio(u);
+        au.onplay = () => { $("#audioState").textContent = "playing"; startMeter(); };
+        au.onended = () => { $("#audioState").textContent = "stopped"; stopMeter(); };
+        au.play();
+      };
+      el.querySelector("[data-d]").onclick = async () => { await IDB.del(a.id); renderAudioList(); renderAssets(); };
+      wrap.appendChild(el);
+    });
+  }
+
+  let meterTimer = null;
+  function startMeter() {
+    const meter = $("#audioMeter");
+    if (!meter) return;
+    meter.classList.add("live");
+    if (meter.children.length === 0) for (let i = 0; i < 26; i++) meter.appendChild(document.createElement("i"));
+    clearInterval(meterTimer);
+    meterTimer = setInterval(() => {
+      Array.from(meter.children).forEach((bar) => { bar.style.height = (12 + Math.random() * 22) + "px"; });
+    }, 110);
+  }
+  function stopMeter() {
+    clearInterval(meterTimer);
+    const meter = $("#audioMeter");
+    if (meter) { meter.classList.remove("live"); Array.from(meter.children).forEach((b) => b.style.height = "5px"); }
+  }
+  $("#btnAudioPlay").onclick = () => { startMeter(); $("#audioState").textContent = "playing"; };
+  $("#btnAudioStop").addEventListener("click", () => { stopMeter(); $("#audioState").textContent = "stopped"; });
+
+  $("#btnGenSubs").onclick = () => {
+    const p = activeProject();
+    const lines = [];
+    let t = 0;
+    p.scenes.forEach((s, i) => {
+      const text = (s.dialogue || s.voiceover || "").trim();
+      const dur = s.duration || 5;
+      if (text) {
+        lines.push({ index: lines.length + 1, start: t, end: t + Math.min(dur, 7), text: text });
+      }
+      t += dur;
+    });
+    if (!lines.length) return toast("No dialogue or voiceover in scenes yet.", "warn");
+    const srt = lines.map((l) =>
+      l.index + "\n" + srtTime(l.start) + " --> " + srtTime(l.end) + "\n" + l.text + "\n"
+    ).join("\n");
+    $("#subtitleOut").textContent = srt;
+    state.timeline.text = lines.map((l) => ({ id: uid("clip"), name: "Cue " + l.index, text: l.text, in: l.start, out: l.end, duration: l.end - l.start }));
+    saveState(); renderTimeline();
+    toast("Subtitles generated from scene dialogue");
+  };
+  function srtTime(t) {
+    const h = Math.floor(t / 3600), m = Math.floor((t % 3600) / 60), s = Math.floor(t % 60), ms = Math.floor((t % 1) * 1000);
+    return [h, m, s].map((n) => String(n).padStart(2, "0")).join(":") + "," + String(ms).padStart(3, "0");
+  }
+  $("#btnExportSrt").onclick = () => {
+    const txt = $("#subtitleOut").textContent.trim();
+    if (!txt || txt.indexOf("-->") === -1) return toast("Generate subtitles first.", "warn");
+    const blob = new Blob([txt], { type: "text/plain" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = (activeProject().name || "flow").replace(/\s+/g, "_") + ".srt";
+    a.click();
+    toast("SRT exported");
+  };
+
+  /* ---------------------------------------------------------------
+     15. Asset library
+     --------------------------------------------------------------- */
+  let assetFilterVal = "all";
+  segment("#assetFilter", (d) => { assetFilterVal = d.f; renderAssets(); });
+  $("#assetSearch").addEventListener("input", renderAssets);
+
+  async function renderAssets() {
+    const grid = $("#assetGrid");
+    if (!grid) return;
+    const all = await IDB.all();
+    const q = ($("#assetSearch").value || "").toLowerCase();
+    const list = all.filter((a) =>
+      (assetFilterVal === "all" || a.kind === assetFilterVal) &&
+      (!q || a.name.toLowerCase().includes(q))
+    );
+    grid.innerHTML = list.length ? "" : '<div class="empty">No assets match</div>';
+    list.forEach((a) => {
+      const card = document.createElement("div");
+      card.className = "panel";
+      const url = URL.createObjectURL(a.blob);
+      const media = a.kind === "image"
+        ? '<img src="' + url + '" style="width:100%;aspect-ratio:16/9;object-fit:cover">'
+        : a.kind === "video"
+          ? '<video src="' + url + '" muted style="width:100%;aspect-ratio:16/9;object-fit:cover"></video>'
+          : '<div style="width:100%;aspect-ratio:16/9;display:flex;align-items:center;justify-content:center;background:#0B0F13;font-family:var(--mono);font-size:11px;color:#5C6874">♪ AUDIO</div>';
+      card.innerHTML = media +
+        '<div class="panel-body" style="padding:10px"><div class="title" style="font-size:11.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + esc(a.name) + "</div>" +
+        '<div class="hint" style="margin-top:3px">' + esc(a.kind) + " · " + (a.size / 1024).toFixed(0) + " KB</div></div>" +
+        '<div class="panel-foot" style="padding:8px 10px"><button class="btn btn-sm btn-ghost" data-dl>⤓ Save</button><button class="btn btn-sm btn-danger" data-del>✕</button></div>';
+      card.querySelector("[data-dl]").onclick = () => {
+        const el = document.createElement("a");
+        el.href = url; el.download = a.name; el.click();
+        toast("Saved at original quality — no recompression");
+      };
+      card.querySelector("[data-del]").onclick = async () => { await IDB.del(a.id); renderAssets(); };
+      grid.appendChild(card);
+    });
+  }
+
+  $("#btnImportAsset").onclick = () => {
+    const inp = document.createElement("input");
+    inp.type = "file"; inp.multiple = true; inp.accept = "image/*,video/*,audio/*";
+    inp.onchange = async () => {
+      for (const f of inp.files) await addAssetFromFile(f);
+      renderAssets();
+      toast(inp.files.length + " asset(s) imported");
+    };
+    inp.click();
+  };
+
+  /* ---------------------------------------------------------------
+     16. Model manager
+     --------------------------------------------------------------- */
+  const CATALOG = [
+    {
+      id: "wan-video", name: "Wan series — video generation", kind: "video",
+      licence: "See official model card (Apache-2.0 on Wan 2.1 releases; verify current)",
+      vram: "indicative 16–80 GB depending on variant and resolution",
+      capabilities: { text_to_video: true, image_to_video: true, first_last_frame: true, video_extension: true, audio: false },
+      resolutions: ["480p", "720p", "1080p"], fps: [16, 24, 25],
+      note: "The Wan family has continued to evolve past my knowledge cutoff (May 2025). Verify current variant names, licences and VRAM needs against the official release before installing."
+    },
+    {
+      id: "ltx-video", name: "LTX-Video", kind: "video",
+      licence: "Lightricks LTXV licence (check the exact terms of the release you download)",
+      vram: "indicative 8–24 GB; real-time-class inference on high-end GPUs",
+      capabilities: { text_to_video: true, image_to_video: true, first_last_frame: true, video_extension: true, audio: false },
+      resolutions: ["480p", "720p", "1080p"], fps: [24, 25, 30],
+      note: "Fast previews and iteration. Quality and motion coherence differ from larger diffusion video models — treat it as a distinct engine, not a drop-in replacement."
+    },
+    {
+      id: "sdxl", name: "Stable Diffusion XL", kind: "image",
+      licence: "CreativeML OpenRAIL++-M", vram: "indicative 8–12 GB",
+      capabilities: { text_to_image: true, image_to_image: true, inpaint: true, outpaint: true, controlnet: true, reference: true },
+      resolutions: ["1024×1024", "1152×896", "896×1152", "1344×768"], fps: [],
+      note: "Mature ecosystem: ControlNet, IP-Adapter, LoRA and inpainting checkpoints are widely available."
+    },
+    {
+      id: "sd35", name: "Stable Diffusion 3.5", kind: "image",
+      licence: "Stability Community Licence — read the threshold terms", vram: "indicative 10–24 GB by variant",
+      capabilities: { text_to_image: true, image_to_image: true, inpaint: true, outpaint: true, controlnet: "partial", reference: true },
+      resolutions: ["1024×1024", "1440×816"], fps: [],
+      note: "Licence includes usage thresholds; confirm they fit your use before deploying commercially."
+    },
+    {
+      id: "flux-schnell", name: "FLUX.1-schnell", kind: "image",
+      licence: "Apache 2.0", vram: "indicative 12–24 GB",
+      capabilities: { text_to_image: true, image_to_image: true, inpaint: "limited", outpaint: "limited", controlnet: true, reference: true },
+      resolutions: ["1024×1024", "1216×832"], fps: [],
+      note: "Few-step generation; excellent prompt adherence for stills."
+    },
+    {
+      id: "piper-tts", name: "Piper TTS", kind: "audio",
+      licence: "MIT", vram: "CPU-capable",
+      capabilities: { text_to_speech: true, voice_cloning: false, streaming: true },
+      resolutions: [], fps: [],
+      note: "Fast, offline, many voices. Returns real WAV files that can be mixed into the timeline and exported."
+    },
+    {
+      id: "kokoro-tts", name: "Kokoro TTS", kind: "audio",
+      licence: "Apache 2.0", vram: "CPU-capable",
+      capabilities: { text_to_speech: true, voice_cloning: false, streaming: true },
+      resolutions: [], fps: [],
+      note: "Compact and high quality for its size; good for narration tracks."
+    },
+    {
+      id: "musicgen", name: "MusicGen (audio generation)", kind: "audio",
+      licence: "MIT", vram: "indicative 4–12 GB",
+      capabilities: { text_to_music: true, continuation: true, voice_cloning: false },
+      resolutions: [], fps: [],
+      note: "Local background score generation. Output is a real audio file — no placeholder tracks."
+    }
+  ];
+
+  function renderModels() {
+    const wrap = $("#modelList");
+    if (!wrap) return;
+    const installedMap = {};
+    (state.models || []).forEach((m) => { installedMap[m.id] = m; });
+    const rows = CATALOG.map((m) => {
+      const live = installedMap[m.id] || {};
+      const installed = live.installed === true;
+      const caps = Object.keys(m.capabilities).map((k) => {
+        const v = m.capabilities[k];
+        const label = k.replace(/_/g, " ");
+        if (v === true) return '<span class="tag ok">' + label + "</span>";
+        if (v === false) return '<span class="tag err" title="not supported by this model">' + label + " ✕</span>";
+        return '<span class="tag warn">' + label + " · " + esc(String(v)) + "</span>";
+      }).join(" ");
+      return '<div class="panel" style="margin-bottom:10px">' +
+        '<div class="panel-body">' +
+        '<div style="display:flex;gap:12px;align-items:flex-start;flex-wrap:wrap">' +
+        '<div style="flex:1;min-width:220px">' +
+        '<div style="display:flex;align-items:center;gap:9px;flex-wrap:wrap"><b style="font-size:14px">' + esc(live.name || m.name) + "</b>" +
+        (installed ? '<span class="tag ok">installed</span>' : '<span class="tag">not installed</span>') +
+        '<span class="tag amber">' + esc(m.kind) + "</span></div>" +
+        '<div class="hint" style="margin-top:6px">' + esc(m.note) + "</div>" +
+        '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:9px">' + caps + "</div>" +
+        "</div>" +
+        '<div style="min-width:210px">' +
+        '<div class="kv"><span class="k">Licence</span><span class="v" style="max-width:190px">' + esc(live.licence || m.licence) + "</span></div>" +
+        '<div class="kv"><span class="k">Hardware</span><span class="v" style="max-width:190px">' + esc(live.vram || m.vram) + "</span></div>" +
+        '<div class="kv"><span class="k">Resolutions</span><span class="v">' + esc((live.resolutions || m.resolutions).join(", ") || "declared by model") + "</span></div>" +
+        '<div class="kv"><span class="k">Frame rates</span><span class="v">' + esc((live.fps || m.fps).map(String).join(", ") || "n/a") + "</span></div>" +
+        "</div></div></div>" +
+        '<div class="panel-foot"><button class="btn btn-sm btn-ghost" data-info>Model card &amp; install</button>' +
+        '<button class="btn btn-sm" data-use>Use in studio</button></div></div>';
+    }).join("");
+    wrap.innerHTML = rows;
+    $("#modelCount").textContent = (state.models || []).length + " declared by backend · " + CATALOG.length + " catalogued";
+
+    $$("#modelList [data-info]").forEach((b, i) => {
+      b.onclick = () => {
+        const m = CATALOG[i];
+        modal(m.name,
+          '<div class="kv"><span class="k">Licence</span><span class="v" style="max-width:320px">' + esc(m.licence) + "</span></div>" +
+          '<div class="kv"><span class="k">Hardware</span><span class="v" style="max-width:320px">' + esc(m.vram) + "</span></div>" +
+          "<p style='margin-top:14px;font-size:12.5px;color:var(--ink-2)'>" + esc(m.note) + "</p>" +
+          "<pre># install example\nhuggingface-cli download &lt;org/repo&gt; --local-dir models/&lt;type&gt;/&lt;name&gt;\n\n# then register it in the backend manifest\n# models/manifest.json -> { \"id\": \"" + esc(m.id) + "\", \"installed\": true }</pre>",
+          [{ label: "Close" }]);
+      };
+    });
+    $$("#modelList [data-use]").forEach((b, i) => {
+      b.onclick = () => {
+        const m = CATALOG[i];
+        if (m.kind === "video") {
+          setVideoModel(m.id); go("video");
+        } else if (m.kind === "image") {
+          setImageModel(m.id); go("image");
+        } else { go("audio"); }
+        toast(m.name + " selected");
+      };
+    });
+
+    // repopulate studio model pickers
+    const vSel = $("#vModel"), iSel = $("#iModel");
+    const videoModels = CATALOG.filter((m) => m.kind === "video");
+    const imageModels = CATALOG.filter((m) => m.kind === "image");
+    if (vSel) vSel.innerHTML = videoModels.map((m) => '<option value="' + m.id + '">' + esc(m.name) + "</option>").join("");
+    if (iSel) iSel.innerHTML = imageModels.map((m) => '<option value="' + m.id + '">' + esc(m.name) + "</option>").join("");
+    if (vSel) vSel.addEventListener("change", updateVideoModelInfo);
+    if (iSel) iSel.addEventListener("change", updateImageModelInfo);
+    updateVideoModelInfo(); updateImageModelInfo();
+  }
+  function setVideoModel(id) { const s = $("#vModel"); if (s) { s.value = id; updateVideoModelInfo(); } }
+  function setImageModel(id) { const s = $("#iModel"); if (s) { s.value = id; updateImageModelInfo(); } }
+
+  function updateVideoModelInfo() {
+    const m = CATALOG.find((x) => x.id === $("#vModel").value);
+    if (!m) return;
+    $("#vModelTag").textContent = m.id;
+    $("#vModelInfo").textContent = m.vram + " · " + m.licence + ". Declared output: " + (m.resolutions.join(", ") || "per model") + " at " + (m.fps.map(String).join("/") || "n/a") + " fps.";
+    // limit UI options to declared capabilities
+    const resSel = $("#vRes");
+    const supported = m.resolutions.map((r) => r.replace("p", ""));
+    Array.from(resSel.options).forEach((o) => { o.disabled = supported.length > 0 && !supported.includes(o.value); });
+    if (resSel.selectedOptions[0] && resSel.selectedOptions[0].disabled) {
+      const first = Array.from(resSel.options).find((o) => !o.disabled);
+      if (first) resSel.value = first.value;
+    }
+    const fpsSel = $("#vFps");
+    Array.from(fpsSel.options).forEach((o) => { o.disabled = m.fps.length > 0 && !m.fps.includes(parseInt(o.value, 10)); });
+    $("#camSupportTag").textContent = m.capabilities.video_extension ? "motion conditioning: declared" : "prompt-driven motion only";
+  }
+  function updateImageModelInfo() {
+    const m = CATALOG.find((x) => x.id === $("#iModel").value);
+    if (!m) return;
+    $("#iModelInfo").textContent = m.vram + " · " + m.licence + ". Native working sizes: " + (m.resolutions.join(", ") || "per model") + ".";
+  }
+  $("#btnRefreshModels").onclick = async () => {
+    const h = await Api.checkHealth();
+    await Api.models();
+    toast(h ? "Model list refreshed from backend" : "Backend offline — showing the local catalogue", h ? "ok" : "warn");
+  };
+
+  /* ---------------------------------------------------------------
+     17. Export center
+     --------------------------------------------------------------- */
+  function buildExportCmd() {
+    const fmt = $("#expFormat").value;
+    const codec = $("#expCodec").value;
+    const rate = $("#expRate").value;
+    const audio = $("#expAudioCodec").value;
+    const fps = $("#expFps").value;
+    const res = $("#expRes").value;
+    const name = ($("#expName").value || "flow_master") + "." + fmt;
+
+    let vflags = "";
+    if (rate === "lossless" || codec === "ffv1") {
+      vflags = codec === "ffv1" ? "-c:v ffv1 -level 3" : "-c:v " + codec + " -qp 0";
+    } else if (rate === "bitrate") {
+      vflags = "-c:v " + codec + " -b:v " + $("#expBitrate").value + "M -maxrate " + $("#expBitrate").value + "M -bufsize " + (parseInt($("#expBitrate").value, 10) * 2) + "M";
+    } else {
+      vflags = "-c:v " + codec + " -crf " + $("#expCrf").value;
+    }
+    if (codec === "prores_ks") vflags = "-c:v prores_ks -profile:v 3";
+    if (codec === "libx265") vflags += " -tag:v hvc1";
+    vflags += " -preset " + $("#expPreset").value;
+
+    let aflags = "-c:a aac -b:a 320k";
+    if (audio === "flac") aflags = "-c:a flac";
+    if (audio === "opus") aflags = "-c:a libopus -b:a 256k";
+    if (audio === "none") aflags = "-an";
+
+    const parts = ["ffmpeg -y -i timeline_master.mov"];
+    if (fps !== "source") parts.push("-r " + fps);
+    if (res !== "source") parts.push('-vf "scale=-2:' + res + '"');
+    parts.push(vflags, aflags, "-movflags +faststart", "-pix_fmt yuv420p", '"' + name + '"');
+    return "# Flow Studio — master export (run locally, full quality, no watermark)\n" + parts.join(" ");
+  }
+  function updateExportPlan() { $("#expCmd").textContent = buildExportCmd(); }
+  ["expFormat", "expCodec", "expPreset", "expRate", "expCrf", "expBitrate", "expFps", "expAudioCodec", "expRes", "expName"]
+    .forEach((id) => { const el = $("#" + id); if (el) el.addEventListener("input", updateExportPlan); });
+  $("#btnExportUpdate").onclick = updateExportPlan;
+  $("#btnCopyExpCmd").onclick = () => copyText($("#expCmd").textContent);
+
+  $("#btnExport").onclick = async () => {
+    const cmd = buildExportCmd();
+    $("#expBar i").style.width = "18%";
+    if (!Api.health) await Api.checkHealth();
+    if (!Api.health) {
+      $("#expBar i").style.width = "0%";
+      toast("Backend offline — FFmpeg runs on the local service. Command copied instead.", "warn");
+      copyText(cmd);
+      return;
+    }
+    try {
+      const res = await Api.generate("render", {
+        kind: "render",
+        project_id: activeProject().id,
+        timeline: state.timeline,
+        settings: {
+          format: $("#expFormat").value, codec: $("#expCodec").value, preset: $("#expPreset").value,
+          rate: $("#expRate").value, crf: $("#expCrf").value, bitrate: $("#expBitrate").value,
+          fps: $("#expFps").value, audio: $("#expAudioCodec").value, res: $("#expRes").value,
+          filename: $("#expName").value, watermark: false
+        },
+        command_plan: cmd
+      });
+      state.exports.unshift({ id: res.job_id || res.id, name: $("#expName").value, at: Date.now(), status: "queued" });
+      saveState(); renderExportHistory();
+      toast("Master render queued");
+      const poll = async () => {
+        const s = await Api.job(res.job_id || res.id);
+        $("#expBar i").style.width = Math.round((s.progress || 0) * 100) + "%";
+        if (s.status === "done" || s.status === "completed") { toast("Master render complete"); return; }
+        if (s.status === "error") { toast("Render failed — " + esc(s.message || "unknown"), "err"); return; }
+        setTimeout(poll, 1200);
+      };
+      poll();
+    } catch (e) {
+      $("#expBar i").style.width = "0%";
+      toast("Export failed — " + esc(String(e.message || e)), "err", true);
+    }
+  };
+
+  function renderExportHistory() {
+    const wrap = $("#exportQueue");
+    if (!wrap) return;
+    $("#expCount").textContent = state.exports.length;
+    wrap.innerHTML = state.exports.length ? "" : '<div class="empty">No exports yet</div>';
+    state.exports.forEach((e) => {
+      const el = document.createElement("div");
+      el.className = "list-item";
+      el.innerHTML = '<div class="grow"><div class="title">' + esc(e.name) + '</div><div class="sub">' + new Date(e.at).toLocaleString() + " · " + esc(e.status) + "</div></div>" +
+        '<span class="tag ' + (e.status === "done" ? "ok" : "warn") + '">' + esc(e.status) + "</span>";
+      wrap.appendChild(el);
+    });
+  }
+
+  /* ---------------------------------------------------------------
+     18. Settings + backup / restore
+     --------------------------------------------------------------- */
+  function renderSettings() {
+    const s = state.settings;
+    $("#setBackendUrl").value = s.backendUrl;
+    $("#setComfyUrl").value = s.comfyUrl;
+    $("#setModelDir").value = s.modelDir;
+    $("#setOutputDir").value = s.outputDir;
+    $("#setOfflineOnly").checked = s.offlineOnly;
+    $("#setGpu").checked = s.cpuFallback;
+    $("#setDefaultAspect").value = s.defaultAspect;
+    $("#setQuality").value = s.quality;
+    $("#setConcurrency").value = s.concurrency;
+    $("#setKeepNative").checked = s.keepNative;
+    $("#setAutoSave").checked = s.autoSave;
+  }
+  $("#btnSaveSettings").onclick = () => {
+    const s = state.settings;
+    s.backendUrl = $("#setBackendUrl").value.trim().replace(/\/$/, "");
+    s.comfyUrl = $("#setComfyUrl").value.trim().replace(/\/$/, "");
+    s.modelDir = $("#setModelDir").value.trim();
+    s.outputDir = $("#setOutputDir").value.trim();
+    s.offlineOnly = $("#setOfflineOnly").checked;
+    s.cpuFallback = $("#setGpu").checked;
+    s.defaultAspect = $("#setDefaultAspect").value;
+    s.quality = $("#setQuality").value;
+    s.concurrency = parseInt($("#setConcurrency").value, 10) || 1;
+    s.keepNative = $("#setKeepNative").checked;
+    s.autoSave = $("#setAutoSave").checked;
+    localStorage.setItem("flowstudio.state.v1", JSON.stringify(state));
+    toast("Settings saved");
+    Api.checkHealth();
+  };
+
+  $("#btnBackup").onclick = () => {
+    const payload = { app: "flow-studio", version: 1, exportedAt: new Date().toISOString(), data: state };
+    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = (activeProject().name || "flow").replace(/\s+/g, "_") + ".flow";
+    a.click();
+    toast("Project backup downloaded — media stays in your local asset folder");
+  };
+  $("#btnRestore").onclick = () => $("#fileRestore").click();
+  $("#fileRestore").addEventListener("change", (e) => {
+    const f = e.target.files[0];
+    if (!f) return;
+    const r = new FileReader();
+    r.onload = () => {
+      try {
+        const parsed = JSON.parse(r.result);
+        const incoming = parsed.data || parsed;
+        if (!incoming || !incoming.projects) throw new Error("unrecognised backup format");
+        state = Object.assign({}, DEFAULT_STATE, incoming);
+        localStorage.setItem("flowstudio.state.v1", JSON.stringify(state));
+        renderAll();
+        toast("Project restored");
+      } catch (err) {
+        toast("Restore failed — " + esc(String(err.message || err)), "err");
+      }
+    };
+    r.readAsText(f);
+  });
+
+  /* ---------------------------------------------------------------
+     19. Boot
+     --------------------------------------------------------------- */
+  function renderAll() {
+    renderDashboard();
+    renderCharacters();
+    renderScenes();
+    renderTimeline();
+    renderAudioList();
+    renderAssets();
+    renderModels();
+    renderExportHistory();
+    renderSettings();
+    updatePayloadPreview();
+    updateExportPlan();
+    const p = activeProject();
+    if (p) $("#projName").textContent = p.name;
+    $("#statScenes").textContent = p ? p.scenes.length : 0;
+  }
+
+  // live top-bar timecode
+  setInterval(() => {
+    const d = new Date();
+    $("#topTimecode").textContent = [d.getHours(), d.getMinutes(), d.getSeconds(), Math.floor(d.getMilliseconds() / 40)]
+      .map((n) => String(n).padStart(2, "0")).join(":");
+  }, 80);
+
+  async function boot() {
+    loadState();
+    await IDB.open().catch(() => toast("IndexedDB unavailable — media will not persist between sessions.", "warn"));
+    renderAll();
+    await Api.checkHealth();
+    await Api.models();
+    if (!Api.health) {
+      toast("Local backend not detected. Generation stays disabled until it is running — no simulated output.", "warn", true);
+    }
+  }
+  boot();
+
+  // expose a tiny API for debugging in the console
+  window.FlowStudio = { state: () => state, Api: Api, go: go };
+})();
+</script>
+</body>
+</html>
